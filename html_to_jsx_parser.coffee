@@ -86,6 +86,8 @@ class HtmlToJsxParser
 
   domToJsxString: (dom) ->
     jsx = ""
+    styles = {}
+
     css_parser = new less.Parser()
 
     cleanAttribute = (value) ->
@@ -111,13 +113,20 @@ class HtmlToJsxParser
                  name.indexOf("aria-") == 0
 
                 if name == "style"
-                  console.log("parse style " + value)
-
                   css_parser.parse ".class { #{value} }", (err, tree) ->
                     if err
-                      console.log("css parse failed #{err}")
+                      #console.log("css parse failed #{err}")
                     else
-                      console.log(tree.rules[0].selectors[0])
+                      generatedClass = "jsxGen#{Math.floor(Math.random() * 10000000)}"
+
+                      css = {}
+
+                      for rule in tree.rules[0].rules
+                        css[rule.name] = rule.value.toCSS()
+
+                      styles[generatedClass] = css
+
+                      jsx += "style={#{generatedClass}}"
                 else
                   jsx += "#{name}=\"#{cleanAttribute(value)}\""
               else
@@ -140,8 +149,13 @@ class HtmlToJsxParser
     for node in dom
       walk(node)
 
-    console.log("parsed into #{jsx}")
+    styleScript = ""
 
-    return jsx
+    for className, css of styles
+      styleScript += "var #{className} = #{JSON.stringify(css)};\n"
+
+    jsx = "<div>#{jsx}</div>"
+
+    return { jsx: jsx, styleScript: styleScript }
 
 window.HtmlToJsxParser = HtmlToJsxParser

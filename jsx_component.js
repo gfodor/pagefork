@@ -5,9 +5,11 @@
 var JsxComponent = React.createClass({
 
   render: function() {
-    var jsx = new HtmlToJsxParser().htmlToJsxString(this.props.html);
+    var result = new HtmlToJsxParser().htmlToJsxString(this.props.html);
+    var jsx = result.jsx;
+    var styleScript = result.styleScript;
 
-    JSXTransformer.run("/**\n  * @jsx React.DOM\n   */\nwindow._renderedJSX = (\n<div>" + jsx + "</div>\n)")
+    JSXTransformer.run("/**\n  * @jsx React.DOM\n   */\n" + styleScript + "\nwindow._renderedJSX = (\n" + jsx + "\n)")
 
     return window._renderedJSX;
   }

@@ -95,8 +95,9 @@
     };
 
     HtmlToJsxParser.prototype.domToJsxString = function(dom) {
-      var cleanAttribute, css_parser, jsx, node, walk, _i, _len;
+      var className, cleanAttribute, css, css_parser, jsx, node, styleScript, styles, walk, _i, _len;
       jsx = "";
+      styles = {};
       css_parser = new less.Parser();
       cleanAttribute = function(value) {
         return value.replace(/\"/g, "&quot;");
@@ -120,12 +121,20 @@
                 }
                 if (reactName || name.indexOf("data-") === 0 || name.indexOf("aria-") === 0) {
                   if (name === "style") {
-                    console.log("parse style " + value);
                     css_parser.parse(".class { " + value + " }", function(err, tree) {
+                      var css, generatedClass, rule, _i, _len, _ref1;
                       if (err) {
-                        return console.log("css parse failed " + err);
+
                       } else {
-                        return console.log(tree.rules[0].selectors[0]);
+                        generatedClass = "jsxGen" + (Math.floor(Math.random() * 10000000));
+                        css = {};
+                        _ref1 = tree.rules[0].rules;
+                        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                          rule = _ref1[_i];
+                          css[rule.name] = rule.value.toCSS();
+                        }
+                        styles[generatedClass] = css;
+                        return jsx += "style={" + generatedClass + "}";
                       }
                     });
                   } else {
@@ -158,8 +167,16 @@
         node = dom[_i];
         walk(node);
       }
-      console.log("parsed into " + jsx);
-      return jsx;
+      styleScript = "";
+      for (className in styles) {
+        css = styles[className];
+        styleScript += "var " + className + " = " + (JSON.stringify(css)) + ";\n";
+      }
+      jsx = "<div>" + jsx + "</div>";
+      return {
+        jsx: jsx,
+        styleScript: styleScript
+      };
     };
 
     return HtmlToJsxParser;
