@@ -7,6 +7,112 @@
 
     function HtmlToJsxParser() {}
 
+    HtmlToJsxParser.prototype.htmlToJsxString = function(html) {
+      var handler;
+      handler = new Tautologistics.NodeHtmlParser.HtmlBuilder(function(error, dom) {
+        if (error) {
+          return console.log("error");
+        }
+      });
+      new Tautologistics.NodeHtmlParser.Parser(handler).parseComplete(html);
+      return this.domToJsxString(handler.dom);
+    };
+
+    HtmlToJsxParser.prototype.domToJsxString = function(dom) {
+      var className, cleanAttribute, css, css_parser, jsx, line_num, node, styleScript, styles, walk, _i, _len;
+      jsx = "";
+      styles = {};
+      css_parser = new less.Parser();
+      cleanAttribute = function(value) {
+        return value.replace(/\"/g, "&quot;");
+      };
+      walk = function(node) {
+        var child, name, reactName, text, value, _i, _len, _ref, _ref1;
+        if (node.type === "tag") {
+          if (React.DOM[node.name] && node.name.toLowerCase() !== "script") {
+            jsx += "<" + node.name + " ";
+            if (node.attributes) {
+              _ref = node.attributes;
+              for (name in _ref) {
+                value = _ref[name];
+                name = name.toLowerCase();
+                if (name === "class") {
+                  name = "classname";
+                }
+                reactName = validReactProperties[name];
+                if (reactName) {
+                  name = reactName;
+                }
+                if (reactName || name.indexOf("data-") === 0 || name.indexOf("aria-") === 0) {
+                  if (name === "style") {
+                    css_parser.parse(".class { " + value + " }", function(err, tree) {
+                      var css, generatedClass, rule, _i, _len, _ref1;
+                      if (err) {
+
+                      } else {
+                        generatedClass = "jsxGen" + (Math.floor(Math.random() * 10000000));
+                        css = {};
+                        _ref1 = tree.rules[0].rules;
+                        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                          rule = _ref1[_i];
+                          css[rule.name] = rule.value.toCSS();
+                        }
+                        styles[generatedClass] = css;
+                        return jsx += "style={" + generatedClass + "}";
+                      }
+                    });
+                  } else {
+                    if (value) {
+                      jsx += " " + name + "=\"" + (cleanAttribute(value)) + "\" ";
+                    } else {
+                      jsx += " " + name + " ";
+                    }
+                  }
+                } else {
+
+                }
+              }
+            }
+            jsx += ">\n";
+            if (node.children != null) {
+              _ref1 = node.children;
+              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                child = _ref1[_i];
+                walk(child);
+              }
+            }
+            return jsx += "</" + node.name + ">\n";
+          } else {
+
+          }
+        } else if (node.type === "text") {
+          text = node.data.trim();
+          text = text.replace(/&nbsp;/, " ");
+          text = text.replace(/&#160;/, " ");
+          return jsx += text;
+        } else {
+          if (node.type !== "comment") {
+            return console.log("invalid type " + node.type);
+          }
+        }
+      };
+      for (_i = 0, _len = dom.length; _i < _len; _i++) {
+        node = dom[_i];
+        walk(node);
+      }
+      styleScript = "";
+      for (className in styles) {
+        css = styles[className];
+        styleScript += "var " + className + " = " + (JSON.stringify(css)) + ";\n";
+      }
+      line_num = 1;
+      jsx = "<div>" + jsx + "</div>";
+      return {
+        jsx: jsx,
+        styleScript: styleScript
+      };
+    };
+
     validReactProperties = {
       accept: "accept",
       accesskey: "accessKey",
@@ -81,112 +187,6 @@
       value: "value",
       width: "width",
       wmode: "wmode"
-    };
-
-    HtmlToJsxParser.prototype.htmlToJsxString = function(html) {
-      var handler;
-      handler = new Tautologistics.NodeHtmlParser.HtmlBuilder(function(error, dom) {
-        if (error) {
-          return console.log("error");
-        }
-      });
-      new Tautologistics.NodeHtmlParser.Parser(handler).parseComplete(html);
-      return this.domToJsxString(handler.dom);
-    };
-
-    HtmlToJsxParser.prototype.domToJsxString = function(dom) {
-      var className, cleanAttribute, css, css_parser, jsx, node, styleScript, styles, walk, _i, _len;
-      jsx = "";
-      styles = {};
-      css_parser = new less.Parser();
-      cleanAttribute = function(value) {
-        return value.replace(/\"/g, "&quot;");
-      };
-      walk = function(node) {
-        var child, name, reactName, text, value, _i, _len, _ref, _ref1;
-        if (node.type === "tag") {
-          if (React.DOM[node.name] && node.name.toLowerCase() !== "script") {
-            jsx += "<" + node.name + " ";
-            if (node.attributes) {
-              _ref = node.attributes;
-              for (name in _ref) {
-                value = _ref[name];
-                name = name.toLowerCase();
-                if (name === "class") {
-                  name = "classname";
-                }
-                reactName = validReactProperties[name];
-                if (reactName) {
-                  name = reactName;
-                }
-                if (reactName || name.indexOf("data-") === 0 || name.indexOf("aria-") === 0) {
-                  if (name === "style") {
-                    css_parser.parse(".class { " + value + " }", function(err, tree) {
-                      var css, generatedClass, rule, _i, _len, _ref1;
-                      if (err) {
-
-                      } else {
-                        generatedClass = "jsxGen" + (Math.floor(Math.random() * 10000000));
-                        css = {};
-                        _ref1 = tree.rules[0].rules;
-                        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                          rule = _ref1[_i];
-                          css[rule.name] = rule.value.toCSS();
-                        }
-                        styles[generatedClass] = css;
-                        return jsx += "style={" + generatedClass + "}";
-                      }
-                    });
-                  } else {
-                    if (value) {
-                      jsx += " " + name + "=\"" + (cleanAttribute(value)) + "\" ";
-                    } else {
-                      jsx += " " + name + " ";
-                    }
-                  }
-                } else {
-                  console.log("invalid attribute " + name);
-                }
-              }
-            }
-            jsx += ">\n";
-            if (node.children != null) {
-              _ref1 = node.children;
-              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                child = _ref1[_i];
-                walk(child);
-              }
-            }
-            return jsx += "</" + node.name + ">\n";
-          } else {
-            return console.log("invalid tag " + node.name);
-          }
-        } else if (node.type === "text") {
-          text = node.data.trim();
-          text = text.replace(/&nbsp;/, " ");
-          text = text.replace(/&#160;/, " ");
-          return jsx += text;
-        } else {
-          if (node.type !== "comment") {
-            return console.log("invalid type " + node.type);
-          }
-        }
-      };
-      for (_i = 0, _len = dom.length; _i < _len; _i++) {
-        node = dom[_i];
-        walk(node);
-      }
-      styleScript = "";
-      for (className in styles) {
-        css = styles[className];
-        styleScript += "var " + className + " = " + (JSON.stringify(css)) + ";\n";
-      }
-      jsx = "<div>" + jsx + "</div>";
-      console.log(jsx);
-      return {
-        jsx: jsx,
-        styleScript: styleScript
-      };
     };
 
     return HtmlToJsxParser;

@@ -9,7 +9,11 @@ var JsxComponent = React.createClass({
     var jsx = result.jsx;
     var styleScript = result.styleScript;
 
-    JSXTransformer.run("/**\n  * @jsx React.DOM\n   */\n" + styleScript + "\nwindow._renderedJSX = (\n" + jsx + "\n)")
+    try {
+      JSXTransformer.run("/**\n  * @jsx React.DOM\n   */\n" + styleScript + "\nwindow._renderedJSX = (\n" + jsx + "\n)")
+    } catch (e) {
+      console.log(e)
+    }
 
     return window._renderedJSX;
   }
