@@ -95,7 +95,7 @@ class HtmlToJsxParser
 
     walk = (node) ->
       if node.type == "tag"
-        if React.DOM[node.name]
+        if React.DOM[node.name] && node.name.toLowerCase() != "script"
           jsx += "<#{node.name} "
 
           if node.attributes
@@ -128,7 +128,10 @@ class HtmlToJsxParser
 
                       jsx += "style={#{generatedClass}}"
                 else
-                  jsx += "#{name}=\"#{cleanAttribute(value)}\""
+                  if value
+                    jsx += " #{name}=\"#{cleanAttribute(value)}\" "
+                  else
+                    jsx += " #{name} "
               else
                 console.log("invalid attribute " + name)
 
@@ -142,9 +145,14 @@ class HtmlToJsxParser
         else
           console.log("invalid tag #{node.name}")
       else if node.type == "text"
-        jsx += node.data
+        text = node.data.trim()
+        text = text.replace(/&nbsp;/, " ") # React BUG?
+        text = text.replace(/&#160;/, " ") # React BUG?
+
+        jsx += text
       else
-        console.log("invalid type " + node.type)
+        unless node.type == "comment"
+          console.log("invalid type " + node.type)
 
     for node in dom
       walk(node)
@@ -155,6 +163,7 @@ class HtmlToJsxParser
       styleScript += "var #{className} = #{JSON.stringify(css)};\n"
 
     jsx = "<div>#{jsx}</div>"
+    console.log(jsx)
 
     return { jsx: jsx, styleScript: styleScript }
 

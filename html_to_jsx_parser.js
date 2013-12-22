@@ -103,9 +103,9 @@
         return value.replace(/\"/g, "&quot;");
       };
       walk = function(node) {
-        var child, name, reactName, value, _i, _len, _ref, _ref1;
+        var child, name, reactName, text, value, _i, _len, _ref, _ref1;
         if (node.type === "tag") {
-          if (React.DOM[node.name]) {
+          if (React.DOM[node.name] && node.name.toLowerCase() !== "script") {
             jsx += "<" + node.name + " ";
             if (node.attributes) {
               _ref = node.attributes;
@@ -138,7 +138,11 @@
                       }
                     });
                   } else {
-                    jsx += "" + name + "=\"" + (cleanAttribute(value)) + "\"";
+                    if (value) {
+                      jsx += " " + name + "=\"" + (cleanAttribute(value)) + "\" ";
+                    } else {
+                      jsx += " " + name + " ";
+                    }
                   }
                 } else {
                   console.log("invalid attribute " + name);
@@ -158,9 +162,14 @@
             return console.log("invalid tag " + node.name);
           }
         } else if (node.type === "text") {
-          return jsx += node.data;
+          text = node.data.trim();
+          text = text.replace(/&nbsp;/, " ");
+          text = text.replace(/&#160;/, " ");
+          return jsx += text;
         } else {
-          return console.log("invalid type " + node.type);
+          if (node.type !== "comment") {
+            return console.log("invalid type " + node.type);
+          }
         }
       };
       for (_i = 0, _len = dom.length; _i < _len; _i++) {
@@ -173,6 +182,7 @@
         styleScript += "var " + className + " = " + (JSON.stringify(css)) + ";\n";
       }
       jsx = "<div>" + jsx + "</div>";
+      console.log(jsx);
       return {
         jsx: jsx,
         styleScript: styleScript

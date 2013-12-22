@@ -1,0 +1,38 @@
+<script type="text/javascript">
+   // quantcast
+   _qoptions = { qacct:"p-82vTvmw-enlng" };
+   
+   try {
+     if(document.location.hostname != 'forums.somethingawful.com')
+       throw undefined;
+   
+     $(document).ready(function() {
+       var qcUrl = 'http://edge.quantserve.com/quant.js';
+       jQuery.getScript(qcUrl);
+   
+       var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+       var gaUrl = gaJsHost + 'google-analytics.com/ga.js';
+       jQuery.getScript(gaUrl, function() {
+         var pageTracker = _gat._getTracker("UA-3064978-2");
+         pageTracker._initData();
+         pageTracker._trackPageview();
+       });
+     });
+   } catch(e) {};
+   
+   // indie
+   // try {
+   //  if(document.location.hostname != 'forums.somethingawful.com')
+   //    throw undefined;
+   
+   //  $(document).ready(function() {
+   //    var ic_element = document.createElement('script');
+   //    ic_element.type = 'text/javascript';
+   //    ic_element.async = true;
+   //    ic_element.id = 'ic_annonymous_pixel';
+   //    ic_element.src = 'http://pixel.indieclick.com/annonymous/domain/somethingawful.com/reach/script_ic.js';
+   //    var ic_script = document.getElementsByTagName('script')[0];
+   //    ic_script.parentNode.insertBefore(ic_element, ic_script);
+   //  });
+   // } catch(e) {};
+</script>
