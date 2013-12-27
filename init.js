@@ -3,27 +3,28 @@
   */
 
 $(function() {
-  React.renderComponent(
-    <div>
-      <JsxEditor />
-    </div>,
-    $("#content")[0]
-  );
-
   $(function() {
-    var cssEditor = CodeMirror.fromTextArea($("#cssEditor")[0], { mode: "css" })
+    $([ { target: "#styles", mode: "text/css", editor: "#cssEditor", component: CssStyles },
+        { target: "#html", mode: "text/html", editor: "#htmlEditor", component: HtmlRenderer } ]).each(function() {
 
-    var updateStyles = function(css) {
-      React.renderComponent(
-        <CssStyles css={css}/>,
-        $("#styles")[0]
-      )
-    };
+      var target = this.target;
+      var mode = this.mode;
+      var editor = this.editor;
+      var component = this.component;
 
-    updateStyles(cssEditor.getValue());
+      var codeMirror = CodeMirror.fromTextArea($(editor)[0], { mode: mode });
+      var updateContent = function(content) {
+        React.renderComponent(
+          new component({ content: content }),
+          $(target)[0]
+        );
+      };
+      
+      updateContent(codeMirror.getValue());
 
-    cssEditor.on("change", function(editor, change) {
-      updateStyles(cssEditor.getValue());
+      codeMirror.on("change", function(editor, change) {
+        updateContent(editor.getValue());
+      });
     });
   });
 });

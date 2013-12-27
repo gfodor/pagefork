@@ -11,18 +11,27 @@
     <script src="observe_dom.js"></script>
     <script src="codemirror/codemirror.js"></script>
     <script src="codemirror/mode/css/css.js"></script>
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+    <script src="codemirror/mode/xml/xml.js"></script>
+    <script src="codemirror/mode/htmlembedded/htmlembedded.js"></script>
+    <script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
     <link rel="stylesheet" href="codemirror/codemirror.css"/>
   </head>
   <body>
     <div id="styles"></div>
-    <div id="content"></div>
+    <div id="html"></div>
 
     <script type="text/jsx" src="components.js"></script>
     <script type="text/jsx" src="init.js"></script>
 
     <p>
-      CSS:
-      <textarea id="cssEditor" rows=40 cols=20>
+      <textarea id="htmlEditor" rows=10 cols=60>
+<div class="foo" style="color: orange;">Hello World</div>
+      </textarea>
+    </p>
+
+    <p>
+      <textarea id="cssEditor" rows=10 cols=20>
 .foo {
   background-color: red;
   padding: 10px;

@@ -2,9 +2,9 @@
   * @jsx React.DOM
   */
 
-var JsxComponent = React.createClass({
+var HtmlRenderer = React.createClass({
   render: function() {
-    asset_package = (new HtmlAssetExtractor()).extract(this.props.html, "http://external.com", "myFork123")
+    asset_package = (new HtmlAssetExtractor()).extract(this.props.content, "http://external.com", "myFork123")
 
     assets = asset_package.assets
     html = asset_package.html
@@ -17,7 +17,7 @@ var JsxComponent = React.createClass({
 
 var CssStyles = React.createClass({
   render: function() {
-    if (this.props.css) {
+    if (this.props.content) {
       var parser = new less.Parser();
       var ret = null;
 
@@ -27,7 +27,7 @@ var CssStyles = React.createClass({
         return selector + " {\n" + rules + "\n}\n";
       };
 
-      parser.parse(this.props.css, function(err, tree) {
+      parser.parse(this.props.content, function(err, tree) {
         if (err) {
           ret = (
             <div></div>
@@ -54,38 +54,4 @@ var CssStyles = React.createClass({
       );
     }
   }
-});
-
-var JsxEditor = React.createClass({
-  getInitialState: function() { 
-    initialHtml = "<div class=\"foo\">Hi</div>";
-    return { sourceHtml: initialHtml, html: initialHtml };
-  },
-  
-  handleSourceHtmlChange: function(event) {
-    this.setState({ html: event.target.value, sourceHtml: event.target.value });
-  },
-
-  handleHtmlChange: function(event) {
-    this.setState({ html: event.target.value });
-  },
-
-  render: function() {
-    var html = this.state.html;
-    var sourceHtml = this.state.sourceHtml;
-
-    return (
-      <div>
-        <JsxComponent html={html}/>
-        <p>
-          source:
-          <textarea rows="5" cols="80" onChange={this.handleSourceHtmlChange} value={sourceHtml}/>
-        </p>
-        <p>
-          target:
-          <textarea rows="5" cols="80" onChange={this.handleHtmlChange} value={html}/>
-        </p>
-      </div>
-    );
-  },
 });
