@@ -7,10 +7,27 @@
     <script src="JSXTransformer-0.8.0.js"></script>
     <script src="html_to_rnode_parser.js"></script>
     <script src="html_asset_extractor.js"></script>
+    <script src="less-1.5.0.min.js"></script>
     <script src="observe_dom.js"></script>
+    <script src="codemirror/codemirror.js"></script>
+    <script src="codemirror/mode/css/css.js"></script>
+    <link rel="stylesheet" href="codemirror/codemirror.css"/>
   </head>
   <body>
+    <div id="styles"></div>
     <div id="content"></div>
-    <script type="text/jsx" src="jsx_component.js"></script>
+
+    <script type="text/jsx" src="components.js"></script>
+    <script type="text/jsx" src="init.js"></script>
+
+    <p>
+      CSS:
+      <textarea id="cssEditor" rows=40 cols=20>
+.foo {
+  background-color: red;
+  padding: 10px;
+}
+      </textarea>
+    </p>
   </body>
 </html>
