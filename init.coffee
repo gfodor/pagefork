@@ -16,22 +16,23 @@ $ ->
 $ ->
   editorInfos = [
     { target: "#styles", mode: "text/css", editorSelector: "#cssEditor", component: CssRenderer },
-    { target: "#html", mode: "text/html", editorSelector: "#htmlEditor", component: HtmlRenderer } 
+    { target: "#html", mode: "text/html", editorSelector: "#htmlEditor", component: HtmlRenderer }
   ]
 
   for editorInfo in editorInfos
-    { target: target, mode: mode, editorSelector: editorSelector, component: component } = editorInfo
+    ((editorInfo) ->
+      { target: target, mode: mode, editorSelector: editorSelector, component: component } = editorInfo
 
-    codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], { mode: mode })
-    window.codeEditors ?= {}
-    window.codeEditors[editorSelector.replace("#", "")] = codeMirror
+      codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], { mode: mode })
+      window.codeEditors ?= {}
+      window.codeEditors[editorSelector.replace("#", "")] = codeMirror
 
-    updateContent = (content) ->
-      React.renderComponent(
-        new component(content: content),
-        $(target)[0])
-    
-    updateContent(codeMirror.getValue())
+      updateContent = (content) ->
+        React.renderComponent(
+          new component(content: content),
+          $(target)[0])
+      
+      updateContent(codeMirror.getValue())
 
-    codeMirror.on "change", (editor, change) ->
-      updateContent(editor.getValue())
+      codeMirror.on "change", (editor, change) ->
+        updateContent(editor.getValue()))(editorInfo)

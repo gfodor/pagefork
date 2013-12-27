@@ -15,7 +15,7 @@
   });
 
   $(function() {
-    var codeMirror, component, editorInfo, editorInfos, editorSelector, mode, target, updateContent, _i, _len, _results;
+    var editorInfo, editorInfos, _i, _len, _results;
     editorInfos = [
       {
         target: "#styles",
@@ -32,23 +32,26 @@
     _results = [];
     for (_i = 0, _len = editorInfos.length; _i < _len; _i++) {
       editorInfo = editorInfos[_i];
-      target = editorInfo.target, mode = editorInfo.mode, editorSelector = editorInfo.editorSelector, component = editorInfo.component;
-      codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], {
-        mode: mode
-      });
-      if (window.codeEditors == null) {
-        window.codeEditors = {};
-      }
-      window.codeEditors[editorSelector.replace("#", "")] = codeMirror;
-      updateContent = function(content) {
-        return React.renderComponent(new component({
-          content: content
-        }), $(target)[0]);
-      };
-      updateContent(codeMirror.getValue());
-      _results.push(codeMirror.on("change", function(editor, change) {
-        return updateContent(editor.getValue());
-      }));
+      _results.push((function(editorInfo) {
+        var codeMirror, component, editorSelector, mode, target, updateContent;
+        target = editorInfo.target, mode = editorInfo.mode, editorSelector = editorInfo.editorSelector, component = editorInfo.component;
+        codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], {
+          mode: mode
+        });
+        if (window.codeEditors == null) {
+          window.codeEditors = {};
+        }
+        window.codeEditors[editorSelector.replace("#", "")] = codeMirror;
+        updateContent = function(content) {
+          return React.renderComponent(new component({
+            content: content
+          }), $(target)[0]);
+        };
+        updateContent(codeMirror.getValue());
+        return codeMirror.on("change", function(editor, change) {
+          return updateContent(editor.getValue());
+        });
+      })(editorInfo));
     }
     return _results;
   });
