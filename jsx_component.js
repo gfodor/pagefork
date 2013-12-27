@@ -5,7 +5,14 @@
 var JsxComponent = React.createClass({
 
   render: function() {
-    return (new HtmlToRNodeParser()).htmlToRNode("<div>" + this.props.html + "</div>")
+    asset_package = (new HtmlAssetExtractor()).extract(this.props.html, "http://external.com", "myFork123")
+
+    assets = asset_package.assets
+    html = asset_package.html
+
+    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + html + "</div>")
+
+    return rnode;
   }
 });
 
