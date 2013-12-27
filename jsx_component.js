@@ -5,27 +5,7 @@
 var JsxComponent = React.createClass({
 
   render: function() {
-    var converter = new HTMLtoJSX({ createClass: false })
-    var jsx = "<div/>";
-
-    console.log("1")
-    if (this.props.html.trim().length > 0) {
-      var parsedJsx = converter.convert(this.props.html);
-
-      if (parsedJsx.trim().length > 0) {
-        jsx = parsedJsx;
-      }
-    }
-    console.log("2")
-    
-    try {
-      JSXTransformer.run("/**\n  * @jsx React.DOM\n   */\nwindow._renderedJSX = (\n" + jsx + "\n)")
-    } catch (e) {
-      console.log(e)
-    }
-    console.log("3")
-
-    return window._renderedJSX;
+    return (new HtmlToRNodeParser()).htmlToRNode("<div>" + this.props.html + "</div>")
   }
 });
 
