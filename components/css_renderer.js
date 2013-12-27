@@ -15,7 +15,7 @@ var HtmlRenderer = React.createClass({
   },
 });
 
-var CssStyles = React.createClass({
+var CssRenderer = React.createClass({
   render: function() {
     if (this.props.content) {
       var parser = new less.Parser();
