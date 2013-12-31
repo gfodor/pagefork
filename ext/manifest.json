@@ -6,10 +6,18 @@
   "version": "1.0",
 
   "permissions": [
-    "https://secure.flickr.com/"
+    "pageCapture",
+    "activeTab",
+    "https://phork.io/phorks",
   ],
+
   "browser_action": {
     "default_icon": "fork_icon.png",
-    "default_popup": "popup.html"
+    "default_title": "Phork"
+  },
+
+  "background": {
+    "scripts": ["jquery-2.0.3.min.js", "phork.js"],
+    "persistent": false
   }
 }
