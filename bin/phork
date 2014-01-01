@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+require("coffee-script");
+
+phork = require("../src");
+
+var sys = require('sys'),
+	phork = require('../src');
+
+sys.puts("Phork server started.");
+phork.rest_server.listen(3000);
