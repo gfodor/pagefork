@@ -5,7 +5,10 @@ require("coffee-script");
 phork = require("../src");
 
 var sys = require('sys'),
-	phork = require('../src');
+	phork = require('../src'),
+  AWS = require('aws-sdk');
+
+AWS.config.loadFromPath("config/aws.json")
 
 sys.puts("Phork server started.");
 phork.rest_server.listen(3000);

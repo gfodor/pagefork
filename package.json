@@ -20,7 +20,8 @@
     "connect": "~2",
     "optimist": ">= 0.2.4",
     "mocha": "*",
-    "uglify-js": "~2"
+    "uglify-js": "~2",
+    "aws-sdk": "~2"
   },
   "engine": "node >= 0.10",
   "main": "lib/index.js",
