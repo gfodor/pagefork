@@ -1,15 +1,52 @@
 fs = require "fs"
 async = require "async"
+cheerio = require "cheerio"
+htmltidy = require "htmltidy"
+_ = require "lodash"
 
 module.exports = class MHTMLIngestor
   ingest: (sourceDir, primaryContentPath, cb) ->
     self = this
-    this.callback = cb
+    self.callback = cb
 
     this.getFiles sourceDir, (err, files) ->
       return self.callback(err) if err
-      console.log(files)
-      self.callback()
+
+      processors = {}
+
+      for path in files
+        isPrimary = primaryContentPath == path
+
+        if /\.css$/i.test(path) || path == primaryContentPath
+          processors[path] = ((path) ->
+            (cb) -> self.documentForPath(path, isPrimary, cb)
+          )(path)
+
+      async.parallel processors, (err, results) ->
+        self.callback(err)
+
+  documentForPath: (path, isPrimary, callback) ->
+    if /\.css$/i.test(path)
+      this.cssDocumentForPath(path, callback)
+    else
+      this.htmlDocumentForPath(path, isPrimary, callback)
+
+  cssDocumentForPath: (path, callback) ->
+    documentName = _.last(path.split("/"))
+
+    callback(null, { name: documentName })
+    
+  htmlDocumentForPath: (path, isPrimary, callback) ->
+    documentName = _.last(path.split("/"))
+
+    fs.readFile path, 'utf8', (err, data) ->
+      $ = cheerio.load(data)
+
+      # Remove CSS
+      $("link[rel='stylesheet']").remove()
+      title = $("title").text()
+      htmltidy.tidy $("body").html() || "", { hideComments: true, indent: true }, (err, html) ->
+        callback(null, { name: documentName, primary: true, content: html  })
 
   getFiles: (dir, cb) ->
     pending = [dir]
@@ -19,6 +56,8 @@ module.exports = class MHTMLIngestor
       next = pending.pop()
 
       fs.readdir next, (err, files) ->
+        return cb(err) if err
+
         files ?= []
 
         for file in files
