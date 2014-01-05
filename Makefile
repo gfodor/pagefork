@@ -12,5 +12,5 @@ clean:
 	rm -rf lib/*
 
 test:
-	node_modules/.bin/mocha
+	node_modules/.bin/mocha --require coffee-script --compilers coffee:coffee-script --recursive ./test
 

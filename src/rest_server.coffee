@@ -9,7 +9,8 @@ module.exports = app = express()
 
 temp.track()
 
-app.use express.bodyParser()
+app.use express.urlencoded()
+app.use express.json()
 
 app.get "/phorks/new", (req, res) ->
   phork_id = hat()
@@ -30,10 +31,7 @@ app.post "/phorks", (req, res) ->
     Bucket: "phork-data",
     Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlData) ->
       temp.open "#{phork_id}.temp.mhtml", (err, mhtmlTempInfo) ->
-        console.log(mhtmlData.Body)
-
         fs.write mhtmlTempInfo.fd, mhtmlData.Body, 0, mhtmlData.ContentLength, null, (err, mhtmlWritten, mhtmlBuffer) ->
-          console.log mhtmlTempInfo.path
           fs.close(mhtmlTempInfo.fd)
 
           mhtml.extract mhtmlTempInfo.path, "foomhtml", ((err, primaryContentPath) ->

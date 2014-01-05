@@ -22,7 +22,8 @@
     "mocha": "*",
     "uglify-js": "~2",
     "aws-sdk": "~2",
-    "temp": ""
+    "temp": "",
+    "should": ""
   },
   "engine": "node >= 0.10",
   "main": "lib/index.js",
