@@ -12,8 +12,18 @@
         payload = {
           mhtml: reader.result
         };
-        return $.post("https://phork.io/phorks", JSON.stringify(payload), function(response) {
-          return console.log("OK");
+        return $.get("http://localhost:3000/phorks/new", JSON.stringify(payload), function(response) {
+          var mhtml_url;
+          mhtml_url = response.mhtml_url;
+          return $.ajax({
+            type: "PUT",
+            contentType: "multipart/related",
+            url: mhtml_url,
+            data: payload.mhtml.toString(),
+            success: function(response) {
+              return console.log(response);
+            }
+          });
         });
       });
       return reader.readAsText(mhtml);
