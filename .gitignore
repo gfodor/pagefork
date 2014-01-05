@@ -1,3 +1,4 @@
 node_modules
 lib
+lib-3rd
 config/aws.json
