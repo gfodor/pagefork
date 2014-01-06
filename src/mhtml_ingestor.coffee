@@ -2,6 +2,7 @@ fs = require "fs"
 async = require "async"
 cheerio = require "cheerio"
 htmltidy = require "htmltidy"
+cssbeautify = require "cssbeautify"
 _ = require "lodash"
 
 module.exports = class MHTMLIngestor
@@ -34,7 +35,9 @@ module.exports = class MHTMLIngestor
   cssDocumentForPath: (path, callback) ->
     documentName = _.last(path.split("/"))
 
-    callback(null, { name: documentName })
+    fs.readFile path, 'utf8', (err, data) ->
+      css = cssbeautify data, { indent: '  ' }
+      callback(null, { name: documentName, content: css })
     
   htmlDocumentForPath: (path, isPrimary, callback) ->
     documentName = _.last(path.split("/"))
@@ -44,6 +47,10 @@ module.exports = class MHTMLIngestor
 
       # Remove CSS
       $("link[rel='stylesheet']").remove()
+      $("link[rel='Stylesheet']").remove()
+      $("link[rel='StyleSheet']").remove()
+      $("link[rel='STYLESHEET']").remove()
+
       title = $("title").text()
       htmltidy.tidy $("body").html() || "", { hideComments: true, indent: true }, (err, html) ->
         callback(null, { name: documentName, primary: true, content: html  })
