@@ -13,7 +13,7 @@ app.use express.urlencoded()
 app.use express.json()
 
 app.get "/phorks/new", (req, res) ->
-  phork_id = hat()
+  phork_id = hat 100, 36
   s3 = new AWS.S3()
 
   s3.getSignedUrl "putObject",
