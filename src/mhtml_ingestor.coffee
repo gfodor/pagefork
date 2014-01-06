@@ -18,19 +18,31 @@ module.exports = class MHTMLIngestor
       for path in files
         isPrimary = primaryContentPath == path
 
-        if /\.css$/i.test(path) || path == primaryContentPath
-          processors[path] = ((path) ->
-            (cb) -> self.documentForPath(path, isPrimary, cb)
-          )(path)
+        processors[path] = ((path) ->
+          (cb) -> self.documentForPath(path, isPrimary, cb)
+        )(path)
 
       async.parallel processors, (err, results) ->
-        self.callback(err, _.values(results))
+        self.callback(err, _.compact(_.values(results)))
 
   documentForPath: (path, isPrimary, callback) ->
-    if /\.css$/i.test(path)
-      this.cssDocumentForPath(path, callback)
-    else
-      this.htmlDocumentForPath(path, isPrimary, callback)
+    fs.readFile "#{path}.meta.json", (err, data) =>
+      return callback(null) if err
+
+      meta = JSON.parse(data)
+      isCss = /\.css$/i.test(path)
+      isNotHtml = false
+
+      if meta? && meta["content-type"]
+        isCss = meta["content-type"].toLowerCase() == "text/css"
+        isNotHtml = meta["content-type"].toLowerCase() != "text/html"
+
+      if isCss
+        this.cssDocumentForPath(path, callback)
+      else if !isNotHtml
+        this.htmlDocumentForPath(path, isPrimary, callback)
+      else
+        callback(null)
 
   cssDocumentForPath: (path, callback) ->
     documentName = _.last(path.split("/"))

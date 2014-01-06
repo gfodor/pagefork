@@ -49,7 +49,7 @@ app.post "/phorks", (req, res) ->
             return res.send(500, err) if err
             fs.close(mhtmlTempInfo.fd)
 
-            mhtml.extract mhtmlTempInfo.path, tempPath, ((err, primaryContentPath, primaryContentUrl) ->
+            mhtml.extract mhtmlTempInfo.path, tempPath, false, true, true, (err, primaryContentPath, primaryContentUrl) ->
               return res.send(500, err) if err
 
               primaryContentDomain = ""
@@ -62,8 +62,8 @@ app.post "/phorks", (req, res) ->
 
               ingestor.ingest tempPath, primaryContentPath, (err, docs) ->
                 return res.send(500, err) if err
+
                 writer.writePhork phork_id, user_id, primaryContentDomain, docs, (err) ->
                   return res.send(500, err) if err
                   res.send({ docs: docs })
-                ), false, true
 
