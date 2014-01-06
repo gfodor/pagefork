@@ -7,7 +7,7 @@ hat = require "hat"
 aws.config.loadFromPath('config/aws.json')
 
 module.exports = class PhorkWriter
-  writePhork: (phork_id, user_id, docs, callback) ->
+  writePhork: (phork_id, user_id, primaryContentDomain, docs, callback) ->
     self = this
 
     dyndb = new aws.DynamoDB(region: "us-east-1")
@@ -15,7 +15,8 @@ module.exports = class PhorkWriter
     item =
       phork_id: { S: phork_id },
       user_id: { S: user_id },
-      created_at: { N: _.now().toString() }
+      created_at: { N: _.now().toString() },
+      primary_content_domain: { S: primaryContentDomain }
 
     dyndb.putItem
       TableName: "phork_roots#{self.tableSuffix()}",

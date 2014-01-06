@@ -1,9 +1,14 @@
 express = require "express"
 hat = require "hat"
 AWS = require "aws-sdk"
-mhtml = require "../lib-3rd/mhtml"
+mhtml = require "mhtml"
 temp = require "temp"
 fs = require "fs"
+cors = require "cors"
+url = require "url"
+
+MHTMLIngestor = require '../lib/mhtml_ingestor'
+PhorkWriter = require '../lib/phork_writer'
 
 module.exports = app = express()
 
@@ -11,6 +16,7 @@ temp.track()
 
 app.use express.urlencoded()
 app.use express.json()
+app.use cors()
 
 app.get "/phorks/new", (req, res) ->
   phork_id = hat 100, 36
@@ -25,17 +31,39 @@ app.get "/phorks/new", (req, res) ->
 app.post "/phorks", (req, res) ->
   s3 = new AWS.S3()
   phork_id = req.body.phork_id
+  user_id = hat 100, 36
+
   return res.send(400, "Required argment phork_id missing.") unless phork_id
+  ingestor = new MHTMLIngestor()
+  writer = new PhorkWriter()
 
-  s3.getObject
-    Bucket: "phork-data",
-    Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlData) ->
-      temp.open "#{phork_id}.temp.mhtml", (err, mhtmlTempInfo) ->
-        fs.write mhtmlTempInfo.fd, mhtmlData.Body, 0, mhtmlData.ContentLength, null, (err, mhtmlWritten, mhtmlBuffer) ->
-          fs.close(mhtmlTempInfo.fd)
+  temp.mkdir "phork", (err, tempPath) ->
+    s3.getObject
+      Bucket: "phork-data",
+      Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlData) ->
+        return res.send(500, err) if err
+        temp.open "#{phork_id}.temp.mhtml", (err, mhtmlTempInfo) ->
+          return res.send(500, err) if err
 
-          mhtml.extract mhtmlTempInfo.path, "foomhtml", ((err, primaryContentPath) ->
-            console.log(primaryContentPath)), false, true
+          fs.write mhtmlTempInfo.fd, mhtmlData.Body, 0, mhtmlData.ContentLength, null, (err, mhtmlWritten, mhtmlBuffer) ->
+            return res.send(500, err) if err
+            fs.close(mhtmlTempInfo.fd)
 
-  res.send({})
+            mhtml.extract mhtmlTempInfo.path, tempPath, ((err, primaryContentPath, primaryContentUrl) ->
+              return res.send(500, err) if err
+
+              primaryContentDomain = ""
+
+              if primaryContentUrl?
+                primaryUrl = url.parse(primaryContentUrl)
+
+                if primaryUrl.host?
+                  primaryContentDomain = primaryUrl.host
+
+              ingestor.ingest tempPath, primaryContentPath, (err, docs) ->
+                return res.send(500, err) if err
+                writer.writePhork phork_id, user_id, primaryContentDomain, docs, (err) ->
+                  return res.send(500, err) if err
+                  res.send({ docs: docs })
+                ), false, true
 

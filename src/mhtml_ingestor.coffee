@@ -24,7 +24,7 @@ module.exports = class MHTMLIngestor
           )(path)
 
       async.parallel processors, (err, results) ->
-        self.callback(err, results)
+        self.callback(err, _.values(results))
 
   documentForPath: (path, isPrimary, callback) ->
     if /\.css$/i.test(path)

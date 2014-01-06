@@ -15,6 +15,6 @@ describe "PhorkWrite", ->
     docs = [{ name: "doc1", content: "content1", primary: true },
             { name: "doc2", content: "content2" }]
 
-    writer.writePhork phork_id, user_id, docs, (err) ->
+    writer.writePhork phork_id, user_id, "www.foo.com", docs, (err) ->
       assert.equal err, null
       done()

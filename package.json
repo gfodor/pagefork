@@ -28,7 +28,9 @@
     "mocha": "~1.16.2",
     "cssbeautify": "~0.3.1",
     "htmltidy": "0.0.6",
-    "assert": "~1.1.0"
+    "assert": "~1.1.0",
+    "node-mhtml": "git://github.com/gfodor/node-mhtml.git#master",
+    "cors": "~2.1.1"
   },
   "engine": "node >= 0.10",
   "main": "lib/index.js",

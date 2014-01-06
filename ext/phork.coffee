@@ -6,7 +6,7 @@ chrome.browserAction.onClicked.addListener (tab) ->
     reader.addEventListener "loadend", ->
       payload = { mhtml: reader.result }
 
-      $.get "#{host}/phorks/new", JSON.stringify(payload), (response) ->
+      $.get "#{host}/phorks/new", { }, (response) ->
         mhtml_url = response.mhtml_url
         phork_id = response.phork_id
 
