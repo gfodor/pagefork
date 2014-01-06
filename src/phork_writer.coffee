@@ -35,7 +35,7 @@ module.exports = class PhorkWriter
         name: { S: doc.name },
         created_at: { N: _.now().toString() },
         content: { B: gzipContent.toString('base64') },
-        primary: { N: if doc.primary? then "1" else "0" }
+        primary: { N: if doc.primary then "1" else "0" }
 
       dyndb.putItem
         TableName: "phork_content#{self.tableSuffix()}"

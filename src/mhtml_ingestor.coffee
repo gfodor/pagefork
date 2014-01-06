@@ -18,9 +18,9 @@ module.exports = class MHTMLIngestor
       for path in files
         isPrimary = primaryContentPath == path
 
-        processors[path] = ((path) ->
+        processors[path] = ((path, isPrimary) ->
           (cb) -> self.documentForPath(path, isPrimary, cb)
-        )(path)
+        )(path, isPrimary)
 
       async.parallel processors, (err, results) ->
         self.callback(err, _.compact(_.values(results)))
@@ -39,7 +39,7 @@ module.exports = class MHTMLIngestor
 
       if isCss
         this.cssDocumentForPath(path, callback)
-      else if !isNotHtml
+      else if !isNotHtml && isPrimary
         this.htmlDocumentForPath(path, isPrimary, callback)
       else
         callback(null)
@@ -65,7 +65,7 @@ module.exports = class MHTMLIngestor
 
       title = $("title").text()
       htmltidy.tidy $("body").html() || "", { hideComments: true, indent: true }, (err, html) ->
-        callback(null, { name: documentName, primary: true, content: html  })
+        callback(null, { name: documentName, primary: isPrimary, content: html  })
 
   getFiles: (dir, cb) ->
     pending = [dir]
