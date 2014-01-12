@@ -2,59 +2,34 @@
 (function() {
 
   $(function() {
-    return $("#loadEtsy").click(function(e) {
-      var url;
-      e.preventDefault();
-      url = "http://localhost:8000/test_html_docs/etsy1.html";
-      $.get(url, function(response) {
-        var asset_package;
-        asset_package = (new HtmlAssetExtractor()).extract(response, "http://external.com", "myFork123");
-        return console.log(asset_package);
+    var docIds, phorkId;
+    docIds = [];
+    phorkId = $('body').data('phorkId');
+    return $.get("/phorks/" + phorkId + ".json", {
+      dataType: "json"
+    }, function(res) {
+      var doc, docInfo, sjs, socket, _i, _len, _ref, _results;
+      socket = new BCSocket(null, {
+        reconnect: true
       });
-      return false;
-    });
-  });
-
-  $(function() {
-    var editorInfo, editorInfos, _i, _len, _results;
-    editorInfos = [
-      {
-        target: "#styles",
-        mode: "text/css",
-        editorSelector: "#cssEditor",
-        component: CssRenderer
-      }, {
-        target: "#html",
-        mode: "text/html",
-        editorSelector: "#htmlEditor",
-        component: HtmlRenderer
-      }
-    ];
-    _results = [];
-    for (_i = 0, _len = editorInfos.length; _i < _len; _i++) {
-      editorInfo = editorInfos[_i];
-      _results.push((function(editorInfo) {
-        var codeMirror, component, editorSelector, mode, target, updateContent, _ref;
-        target = editorInfo.target, mode = editorInfo.mode, editorSelector = editorInfo.editorSelector, component = editorInfo.component;
-        codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], {
-          mode: mode
-        });
-        if ((_ref = window.codeEditors) == null) {
-          window.codeEditors = {};
+      sjs = new window.sharejs.Connection(socket);
+      _ref = res.docs;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        docInfo = _ref[_i];
+        console.log(docInfo);
+        if (docInfo.primary) {
+          doc = sjs.get('docs', docInfo.doc_id);
+          doc.subscribe();
+          _results.push(doc.whenReady(function() {
+            return doc.attachTextarea($("#htmlEditor")[0]);
+          }));
+        } else {
+          _results.push(void 0);
         }
-        window.codeEditors[editorSelector.replace("#", "")] = codeMirror;
-        updateContent = function(content) {
-          return React.renderComponent(new component({
-            content: content
-          }), $(target)[0]);
-        };
-        updateContent(codeMirror.getValue());
-        return codeMirror.on("change", function(editor, change) {
-          return updateContent(editor.getValue());
-        });
-      })(editorInfo));
-    }
-    return _results;
+      }
+      return _results;
+    });
   });
 
 }).call(this);

@@ -94,10 +94,10 @@ app.get "/phorks/:phork_id.json", (req, res) ->
         created_at: new Date(_.parseInt(item.created_at.N))
         doc_id: item.doc_id.S
         type: item.type.S
-        primary: item.doc_id.N == '1'
+        primary: item.primary.N == '1'
         name: item.name.S
 
-      res.send JSON.stringify(docs)
+      res.json { docs }
 
 app.get "/phorks/:phork_id", (req, res) ->
   res.render 'phork', { phork_id: req.params.phork_id }

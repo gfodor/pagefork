@@ -7,9 +7,11 @@ html
     script(src="/javascripts/react-0.8.0.js")
     script(src="/javascripts/JSXTransformer-0.8.0.js")
     script(src="/javascripts/html_to_rnode_parser.js")
-    script(src="/javascripts/html_asset_extractor.js")
-    script(src="/javascripts/less-1.5.0.min.js")
     script(src="/javascripts/observe_dom.js")
+    script(src="/javascripts/text.js")
+    script(src="/javascripts/json0.js")
+    script(src="/javascripts/share.js")
+    script(src="/javascripts/bcsocket.js")
     script(src="/codemirror/codemirror.js")
     script(src="/codemirror/mode/css/css.js")
     script(src="/codemirror/mode/javascript/javascript.js")
@@ -17,9 +19,11 @@ html
     script(src="/codemirror/mode/htmlembedded/htmlembedded.js")
     script(src="/codemirror/mode/htmlmixed/htmlmixed.js")
     script(type="text/jsx" src="/javascripts/rendering_components.js")
+    // Note this has to come at the end because it introduces window.require :P
+    script(src="/javascripts/less-1.5.0.min.js")
     link(rel="stylesheet" href="/codemirror/codemirror.css")
 
-  body
+  body("data-phork-id"=phork_id)
     #styles
     #html
 
