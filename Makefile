@@ -9,14 +9,14 @@ server:
 	$(COFFEE) -c -o lib src/server
 
 server-watch:
-	$(COFFEE) -c -o -w lib src/server
+	$(COFFEE) -c -w -o lib src/server
 
 client:
 	$(COFFEE) -c -o assets/javascripts src/client
 	cp src/client/*.js assets/javascripts
 
 client-watch:
-	$(COFFEE) -c -o -w assets/javascripts src/client
+	$(COFFEE) -c -w -o assets/javascripts src/client
 
 clean:
 	rm -rf lib/*

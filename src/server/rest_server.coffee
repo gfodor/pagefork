@@ -7,6 +7,10 @@ fs = require "fs"
 cors = require "cors"
 url = require "url"
 util = require "util"
+livedb = require "livedb"
+sharejs = require "share"
+{Duplex} = require 'stream'
+browserChannel = require('browserchannel').server
 
 MHTMLIngestor = require '../../lib/mhtml_ingestor'
 PhorkWriter = require '../../lib/phork_writer'
@@ -24,13 +28,44 @@ app.use "/", express.static("assets")
 
 app.set 'view engine', 'jade'
 
+backend = livedb.client require("livedb-dynamodb")(new AWS.DynamoDB())
+redis = require("redis").createClient(6379, "localhost")
+share = sharejs.server.createClient {backend, redis}
+
+app.use browserChannel {webserver: app}, (client) ->
+  stream = new Duplex objectMode:yes
+  stream._write = (chunk, encoding, callback) ->
+    #console.log 's->c ', chunk
+    if client.state isnt 'closed' # silently drop messages after the session is closed
+      client.send chunk
+    callback()
+
+  stream._read = -> # Ignore. You can't control the information, man!
+
+  stream.headers = client.headers
+  stream.remoteAddress = stream.address
+
+  client.on 'message', (data) ->
+    #console.log 'c->s ', data
+    stream.push data
+
+  stream.on 'error', (msg) ->
+    client.stop()
+
+  client.on 'close', (reason) ->
+    stream.emit 'close'
+    stream.emit 'end'
+    stream.end()
+
+  # ... and give the stream to ShareJS.
+  share.listen stream
+
 handle_error = (err) ->
   return unless err
   util.log err
   util.log err.stack
 
-app.get "/phorks/:phork_id", (req, res) ->
-  res.render 'phork', { phork_id: req.params.phork_id }
+app.use '/doc', share.rest()
 
 app.get "/phorks/new", (req, res) ->
   phork_id = hat 100, 36
@@ -41,6 +76,9 @@ app.get "/phorks/new", (req, res) ->
     ContentType: "multipart/related",
     Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mHtmlUrl) ->
       res.send { mhtml_url: mHtmlUrl, phork_id: phork_id }
+
+app.get "/phorks/:phork_id", (req, res) ->
+  res.render 'phork', { phork_id: req.params.phork_id }
 
 app.post "/phorks", (req, res) ->
   s3 = new AWS.S3()
