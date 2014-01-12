@@ -7,13 +7,20 @@ $ ->
     sjs = new window.sharejs.Connection(socket)
 
     for docInfo in res.docs
-      console.log docInfo
       if docInfo.primary
         doc = sjs.get('docs', docInfo.doc_id)
         doc.subscribe()
 
         doc.whenReady ->
-          doc.attachTextarea($("#htmlEditor")[0])
+          codeMirror = CodeMirror.fromTextArea($("#htmlEditor")[0], { mode: "text/#{docInfo.type}" })
+          doc.attachCodeMirror(codeMirror)
+          component = new HtmlRenderer(content: doc.snapshot)
+
+          setTimeout(->
+            target = $("#html")[0]
+            React.renderComponent(component, $("#html")[0])
+          , 0)
+            
       #if (!doc.type) doc.create('text')
       #if (doc.type && doc.type.name === 'text')
       #  doc.attachTextarea(elem)

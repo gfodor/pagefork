@@ -17,12 +17,23 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         docInfo = _ref[_i];
-        console.log(docInfo);
         if (docInfo.primary) {
           doc = sjs.get('docs', docInfo.doc_id);
           doc.subscribe();
           _results.push(doc.whenReady(function() {
-            return doc.attachTextarea($("#htmlEditor")[0]);
+            var codeMirror, component;
+            codeMirror = CodeMirror.fromTextArea($("#htmlEditor")[0], {
+              mode: "text/" + docInfo.type
+            });
+            doc.attachCodeMirror(codeMirror);
+            component = new HtmlRenderer({
+              content: doc.snapshot
+            });
+            return setTimeout(function() {
+              var target;
+              target = $("#html")[0];
+              return React.renderComponent(component, $("#html")[0]);
+            }, 0);
           }));
         } else {
           _results.push(void 0);

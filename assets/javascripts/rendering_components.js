@@ -4,12 +4,16 @@
 
 var HtmlRenderer = React.createClass({
   render: function() {
-    asset_package = (new HtmlAssetExtractor()).extract(this.props.content, "http://external.com", "myFork123")
+    var container = document.createElement('html')
+    container.innerHTML = this.props.content
 
-    assets = asset_package.assets
-    html = asset_package.html
+    var newBody = $("body", container);
 
-    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + html + "</div>")
+    if (newBody.length == 0) {
+      newBody = $(container);
+    }
+
+    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + newBody.html() + "</div>")
 
     return rnode;
   },
