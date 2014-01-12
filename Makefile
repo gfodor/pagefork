@@ -6,7 +6,7 @@ UGLIFY = node_modules/.bin/uglifyjs -d WEB=true
 all:
 
 watch:
-	$(COFFEE) -c -w -o lib src
+	$(COFFEE) -c -w -o . src
 
 clean:
 	rm -rf lib/*
