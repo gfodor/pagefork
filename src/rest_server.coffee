@@ -6,6 +6,7 @@ temp = require "temp"
 fs = require "fs"
 cors = require "cors"
 url = require "url"
+util = require "util"
 
 MHTMLIngestor = require '../lib/mhtml_ingestor'
 PhorkWriter = require '../lib/phork_writer'
@@ -17,6 +18,11 @@ temp.track()
 app.use express.urlencoded()
 app.use express.json()
 app.use cors()
+
+handle_error = (err) ->
+  return unless err
+  util.log err
+  util.log err.stack
 
 app.get "/phorks/new", (req, res) ->
   phork_id = hat 100, 36
@@ -41,16 +47,18 @@ app.post "/phorks", (req, res) ->
     s3.getObject
       Bucket: "phork-data",
       Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlData) ->
-        return res.send(500, err) if err
+        return res.send(500, err) if handle_error(err)
+
         temp.open "#{phork_id}.temp.mhtml", (err, mhtmlTempInfo) ->
-          return res.send(500, err) if err
+          return res.send(500, err) if handle_error(err)
 
           fs.write mhtmlTempInfo.fd, mhtmlData.Body, 0, mhtmlData.ContentLength, null, (err, mhtmlWritten, mhtmlBuffer) ->
-            return res.send(500, err) if err
+            return res.send(500, err) if handle_error(err)
+
             fs.close(mhtmlTempInfo.fd)
 
             mhtml.extract mhtmlTempInfo.path, tempPath, false, true, true, (err, primaryContentPath, primaryContentUrl) ->
-              return res.send(500, err) if err
+              return res.send(500, err) if handle_error(err)
 
               primaryContentDomain = ""
 
@@ -61,9 +69,10 @@ app.post "/phorks", (req, res) ->
                   primaryContentDomain = primaryUrl.host
 
               ingestor.ingest tempPath, primaryContentPath, (err, docs) ->
-                return res.send(500, err) if err
+                return res.send(500, err) if handle_error(err)
 
                 writer.writePhork phork_id, user_id, primaryContentDomain, docs, (err) ->
-                  return res.send(500, err) if err
-                  res.send({ docs: docs })
+                  return res.send(500, err) if handle_error(err)
+
+                  res.send({ phork_id: phork_id })
 

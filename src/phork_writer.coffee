@@ -1,16 +1,17 @@
 async = require "async"
 _ = require "lodash"
-aws = require "aws-sdk"
+AWS = require "aws-sdk"
 zlib = require "zlib"
 hat = require "hat"
-
-aws.config.loadFromPath('config/aws.json')
+livedbdynamodb = require "livedb-dynamodb"
+AWS.config.loadFromPath('config/aws.json')
+livedb = (require "livedb").client(livedbdynamodb(new AWS.DynamoDB()))
 
 module.exports = class PhorkWriter
   writePhork: (phork_id, user_id, primaryContentDomain, docs, callback) ->
     self = this
 
-    dyndb = new aws.DynamoDB(region: "us-east-1")
+    dyndb = new AWS.DynamoDB()
 
     item =
       phork_id: { S: phork_id },
@@ -19,7 +20,7 @@ module.exports = class PhorkWriter
       primary_content_domain: { S: primaryContentDomain }
 
     dyndb.putItem
-      TableName: "phork_roots#{self.tableSuffix()}",
+      TableName: 'phork_roots',
       Item: item, (err) ->
         async.each docs,
           ((doc, callback) -> self.writePhorkDocument(dyndb, phork_id, doc, callback)),
@@ -27,19 +28,23 @@ module.exports = class PhorkWriter
 
   writePhorkDocument: (dyndb, phork_id, doc, callback) ->
     self = this
+    doc_id = hat 100, 36
 
-    zlib.gzip doc.content, (err, gzipContent) ->
-      item =
-        phork_content_id: { S: hat 100, 36 },
-        phork_id: { S: phork_id },
-        name: { S: doc.name },
-        created_at: { N: _.now().toString() },
-        content: { B: gzipContent.toString('base64') },
-        primary: { N: if doc.primary then "1" else "0" }
+    item =
+      phork_id: { S: phork_id },
+      doc_id: { S: doc_id },
+      name: { S: doc.name },
+      created_at: { N: _.now().toString() },
+      primary: { N: if doc.primary then "1" else "0" }
 
-      dyndb.putItem
-        TableName: "phork_content#{self.tableSuffix()}"
-        Item: item, callback
+    dyndb.putItem
+      TableName: 'phork_docs'
+      Item: item, (err, data) ->
+        return callback(err) if err
+
+        # TODO redis
+        collection = livedb.collection "docs"
+        collection.submit doc_id, { v: 0, create: { type: 'text', data: doc.content } }, callback
  
   tableSuffix: ->
     if process.env.NODE_ENV == "production" then "" else "_development"
