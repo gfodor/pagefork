@@ -12,6 +12,6 @@ chrome.browserAction.onClicked.addListener (tab) ->
 
         $.ajax type: "PUT", contentType: "multipart/related", url: mhtml_url, data: payload.mhtml.toString(), success: (response) ->
           $.post "#{host}/phorks", { phork_id: phork_id }, (response) ->
-            console.log(response)
+            chrome.tabs.executeScript code: "document.location = '#{host}/phorks/#{phork_id}';"
 
     reader.readAsText(mhtml)

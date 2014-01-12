@@ -26,7 +26,9 @@
               return $.post("" + host + "/phorks", {
                 phork_id: phork_id
               }, function(response) {
-                return console.log(response);
+                return chrome.tabs.executeScript({
+                  code: "document.location = '" + host + "/phorks/" + phork_id + "';"
+                });
               });
             }
           });
