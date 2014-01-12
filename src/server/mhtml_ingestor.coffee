@@ -49,7 +49,7 @@ module.exports = class MHTMLIngestor
 
     fs.readFile path, 'utf8', (err, data) ->
       css = cssbeautify data, { indent: '  ' }
-      callback(null, { name: documentName, content: css })
+      callback(null, { type: "css", name: documentName, content: css })
     
   htmlDocumentForPath: (path, isPrimary, callback) ->
     documentName = _.last(path.split("/"))
@@ -65,7 +65,7 @@ module.exports = class MHTMLIngestor
 
       title = $("title").text()
       htmltidy.tidy $("body").html() || "", { hideComments: true, indent: true }, (err, html) ->
-        callback(null, { name: documentName, primary: isPrimary, content: html  })
+        callback(null, { type: "html", name: documentName, primary: isPrimary, content: html  })
 
   getFiles: (dir, cb) ->
     pending = [dir]

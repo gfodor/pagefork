@@ -1,6 +1,7 @@
 express = require "express"
 hat = require "hat"
 AWS = require "aws-sdk"
+AWS.config.loadFromPath('config/aws.json')
 mhtml = require "mhtml"
 temp = require "temp"
 fs = require "fs"
@@ -9,6 +10,7 @@ url = require "url"
 util = require "util"
 livedb = require "livedb"
 sharejs = require "share"
+_ = require "lodash"
 {Duplex} = require 'stream'
 browserChannel = require('browserchannel').server
 
@@ -28,7 +30,8 @@ app.use "/", express.static("assets")
 
 app.set 'view engine', 'jade'
 
-backend = livedb.client require("livedb-dynamodb")(new AWS.DynamoDB())
+dynamodb = new AWS.DynamoDB()
+backend = livedb.client require("livedb-dynamodb")(dynamodb)
 redis = require("redis").createClient(6379, "localhost")
 share = sharejs.server.createClient {backend, redis}
 
@@ -77,6 +80,25 @@ app.get "/phorks/new", (req, res) ->
     Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mHtmlUrl) ->
       res.send { mhtml_url: mHtmlUrl, phork_id: phork_id }
 
+app.get "/phorks/:phork_id.json", (req, res) ->
+  dynamodb.query
+    TableName: "phork_docs"
+    Select: "ALL_ATTRIBUTES"
+    ConsistentRead: true
+    KeyConditions:
+      phork_id:
+        AttributeValueList: [{ S: req.params.phork_id }]
+        ComparisonOperator: "EQ"
+    (err, data) ->
+      docs = _.map data.Items, (item) ->
+        created_at: new Date(_.parseInt(item.created_at.N))
+        doc_id: item.doc_id.S
+        type: item.type.S
+        primary: item.doc_id.N == '1'
+        name: item.name.S
+
+      res.send JSON.stringify(docs)
+
 app.get "/phorks/:phork_id", (req, res) ->
   res.render 'phork', { phork_id: req.params.phork_id }
 
@@ -117,7 +139,7 @@ app.post "/phorks", (req, res) ->
               ingestor.ingest tempPath, primaryContentPath, (err, docs) ->
                 return res.send(500, err) if handle_error(err)
 
-                writer.writePhork phork_id, user_id, primaryContentDomain, docs, (err) ->
+                writer.writePhork phork_id, user_id, primaryContentDomain, docs, backend, (err) ->
                   return res.send(500, err) if handle_error(err)
 
                   res.send({ phork_id: phork_id })
