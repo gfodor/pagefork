@@ -2,10 +2,8 @@
 
 require("coffee-script");
 
-phork = require("../src");
-
 var sys = require('sys'),
-	phork = require('../src'),
+	phork = require('../src/server'),
   AWS = require('aws-sdk');
 
 AWS.config.loadFromPath("config/aws.json")

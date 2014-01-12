@@ -8,8 +8,8 @@ cors = require "cors"
 url = require "url"
 util = require "util"
 
-MHTMLIngestor = require '../lib/mhtml_ingestor'
-PhorkWriter = require '../lib/phork_writer'
+MHTMLIngestor = require '../../lib/mhtml_ingestor'
+PhorkWriter = require '../../lib/phork_writer'
 
 module.exports = app = express()
 
@@ -17,12 +17,20 @@ temp.track()
 
 app.use express.urlencoded()
 app.use express.json()
+app.use express.compress()
 app.use cors()
+
+app.use "/", express.static("assets")
+
+app.set 'view engine', 'jade'
 
 handle_error = (err) ->
   return unless err
   util.log err
   util.log err.stack
+
+app.get "/phorks/:phork_id", (req, res) ->
+  res.render 'phork', { phork_id: req.params.phork_id }
 
 app.get "/phorks/new", (req, res) ->
   phork_id = hat 100, 36

@@ -1,0 +1,37 @@
+doctype
+
+html
+  head
+    title= "Phork " + phork_id
+    script(src="http://code.jquery.com/jquery-1.10.0.min.js")
+    script(src="/javascripts/react-0.8.0.js")
+    script(src="/javascripts/JSXTransformer-0.8.0.js")
+    script(src="/javascripts/html_to_rnode_parser.js")
+    script(src="/javascripts/html_asset_extractor.js")
+    script(src="/javascripts/less-1.5.0.min.js")
+    script(src="/javascripts/observe_dom.js")
+    script(src="/codemirror/codemirror.js")
+    script(src="/codemirror/mode/css/css.js")
+    script(src="/codemirror/mode/javascript/javascript.js")
+    script(src="/codemirror/mode/xml/xml.js")
+    script(src="/codemirror/mode/htmlembedded/htmlembedded.js")
+    script(src="/codemirror/mode/htmlmixed/htmlmixed.js")
+    script(type="text/jsx" src="/javascripts/rendering_components.js")
+    link(rel="stylesheet" href="/codemirror/codemirror.css")
+
+  body
+    #styles
+    #html
+
+    script(src="/javascripts/init.js", type="text/jsx")
+
+    div(style="width:600px")
+      textarea#htmlEditor(rows=10, cols=60).
+        <div class="foo" style="color: orange;">Hello World</div>
+
+    div(style="width:600px")
+      textarea#cssEditor(rows=10, cols=20).
+        .foo {
+          background-color: red;
+          padding: 10px;
+        }

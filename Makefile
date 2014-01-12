@@ -5,8 +5,18 @@ UGLIFY = node_modules/.bin/uglifyjs -d WEB=true
 
 all:
 
-watch:
-	$(COFFEE) -c -w -o lib src
+server:
+	$(COFFEE) -c -o lib src/server
+
+server-watch:
+	$(COFFEE) -c -o -w lib src/server
+
+client:
+	$(COFFEE) -c -o assets/javascripts src/client
+	cp src/client/*.js assets/javascripts
+
+client-watch:
+	$(COFFEE) -c -o -w assets/javascripts src/client
 
 clean:
 	rm -rf lib/*
