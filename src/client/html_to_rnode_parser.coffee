@@ -40,37 +40,43 @@ class HtmlToRNodeParser
     tag = node.tagName.toLowerCase()
     return null if tag == "script" || tag == "noscript" || tag == "head"
 
+    isTT = tag == "tt"
     isBody = tag == "body"
+    isFont = tag == "font"
+
     rNodeAttributes = { key: rNodeKey }
     konstructor = (!isBody && React.DOM[tag]) || React.DOM.div
 
     styles = {}
+
+    if isTT
+      styles["font-family"] = "monospace"
     
-    for attribute in node.attributes
-      attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name
+    unless isFont
+      for attribute in node.attributes
+        attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name
 
-      if attributeName == "style"
-        for selector, value of this.parseStyles(attribute.value)
-          styles[selector] = value
-      else if attributeName == "bgcolor"
-        styles["background-color"] = attribute.value
-      else if attributeName == "fgcolor"
-        styles["color"] = attribute.value
-      else if attributeName == "align"
-        if tag == "div" && attribute.value.toLowerCase() == "center"
-          konstructor = React.DOM.center
+        if attributeName == "style"
+          for selector, value of this.parseStyles(attribute.value)
+            styles[selector] = value
         else
-          styles["text-align"] = attribute.value
-      else if attributeName == "valign"
-        styles["vertical-align"] = attribute.value
-      else
-        rNodeAttributes[attributeName] = attribute.value
+          rNodeAttributes[attributeName] = attribute.value
 
-    if _.keys(styles).length > 0
+      if _.keys(styles).length > 0
+        rNodeAttributes.style = styles
+    else
+      for attribute in node.attributes
+        if attribute.name == "face"
+          styles["font-family"] = attribute.value
+        else if attribute.name == "color"
+          styles["color"] = attribute.value
+        else if attribute.name == "size"
+          styles["font-size"] = attribute.value
+
       rNodeAttributes.style = styles
 
     if isBody
-      rNodeAttributes.className ?= ""
+      rNodeAttributes.className = "" unless rNodeAttributes.className?
       rNodeAttributes.className += " phork-html-body"
 
     childrenRNodes = []

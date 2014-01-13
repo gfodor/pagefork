@@ -72,11 +72,14 @@ module.exports = class MHTMLIngestor
       tidyOps["logical-emphasis"] = true
       tidyOps["output-html"] = true
       tidyOps["show-body-only"] = true
-      bodyClass = $("body").attr("class")
+      fullHtml = $("body").html()
+      $("body").empty()
+      bodyTag = $("body").toString().replace("</body>", "")
+      bodyClass = $("body").attr("class") || ""
 
-      htmltidy.tidy $("body").html() || "", tidyOps, (err, html) ->
+      htmltidy.tidy fullHtml || "", tidyOps, (err, html) ->
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "  #{s}").join("\n")
-        finalHtml = "<body class=\"#{bodyClass}\">\n#{indentedHtml}\n</body>"
+        finalHtml = "#{bodyTag}\n#{indentedHtml}\n</body>"
 
         callback(null, { type: "html", name: documentName, primary: isPrimary, content: finalHtml  })
 

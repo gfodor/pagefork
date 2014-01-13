@@ -1827,7 +1827,16 @@ var DefaultDOMPropertyConfig = {
     x: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
-    y: MUST_USE_ATTRIBUTE
+    y: MUST_USE_ATTRIBUTE,
+    // gfodor
+    bgcolor: null,
+    fgcolor: null,
+    valign: null,
+    align: null,
+    link: null,
+    vlink: null,
+    alink: null,
+    text: null
   },
   DOMAttributeNames: {
     className: 'class',
@@ -5261,7 +5270,7 @@ var ReactDOM = objMapKeyVal({
   rect: false,
   svg: false,
   text: false, 
-  // phork modified
+  // gfodor
   center: true
 }, createDOMComponentClass);
 

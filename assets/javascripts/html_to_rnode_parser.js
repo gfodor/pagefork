@@ -52,56 +52,64 @@
     };
 
     HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey) {
-      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
+      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, isFont, isTT, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
       tag = node.tagName.toLowerCase();
       if (tag === "script" || tag === "noscript" || tag === "head") {
         return null;
       }
+      isTT = tag === "tt";
       isBody = tag === "body";
+      isFont = tag === "font";
       rNodeAttributes = {
         key: rNodeKey
       };
       konstructor = (!isBody && React.DOM[tag]) || React.DOM.div;
       styles = {};
-      _ref = node.attributes;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        attribute = _ref[_i];
-        attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name;
-        if (attributeName === "style") {
-          _ref1 = this.parseStyles(attribute.value);
-          for (selector in _ref1) {
-            value = _ref1[selector];
-            styles[selector] = value;
-          }
-        } else if (attributeName === "bgcolor") {
-          styles["background-color"] = attribute.value;
-        } else if (attributeName === "fgcolor") {
-          styles["color"] = attribute.value;
-        } else if (attributeName === "align") {
-          if (tag === "div" && attribute.value.toLowerCase() === "center") {
-            konstructor = React.DOM.center;
-          } else {
-            styles["text-align"] = attribute.value;
-          }
-        } else if (attributeName === "valign") {
-          styles["vertical-align"] = attribute.value;
-        } else {
-          rNodeAttributes[attributeName] = attribute.value;
-        }
+      if (isTT) {
+        styles["font-family"] = "monospace";
       }
-      if (_.keys(styles).length > 0) {
+      if (!isFont) {
+        _ref = node.attributes;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          attribute = _ref[_i];
+          attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name;
+          if (attributeName === "style") {
+            _ref1 = this.parseStyles(attribute.value);
+            for (selector in _ref1) {
+              value = _ref1[selector];
+              styles[selector] = value;
+            }
+          } else {
+            rNodeAttributes[attributeName] = attribute.value;
+          }
+        }
+        if (_.keys(styles).length > 0) {
+          rNodeAttributes.style = styles;
+        }
+      } else {
+        _ref2 = node.attributes;
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          attribute = _ref2[_j];
+          if (attribute.name === "face") {
+            styles["font-family"] = attribute.value;
+          } else if (attribute.name === "color") {
+            styles["color"] = attribute.value;
+          } else if (attribute.name === "size") {
+            styles["font-size"] = attribute.value;
+          }
+        }
         rNodeAttributes.style = styles;
       }
       if (isBody) {
-        if ((_ref2 = rNodeAttributes.className) == null) {
+        if (rNodeAttributes.className == null) {
           rNodeAttributes.className = "";
         }
         rNodeAttributes.className += " phork-html-body";
       }
       childrenRNodes = [];
       _ref3 = node.childNodes;
-      for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
-        childNode = _ref3[_j];
+      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+        childNode = _ref3[_k];
         childRNode = this.rNodeFromNode(childNode, "rNode" + childrenRNodes.length);
         if (childRNode) {
           childrenRNodes[childrenRNodes.length] = childRNode;
