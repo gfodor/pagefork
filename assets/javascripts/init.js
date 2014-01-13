@@ -10,7 +10,7 @@
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, cssDiv, delay, editor, target;
+        var aceEditor, codeDiv, component, editor, target;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
         editor = $("<div>");
         codeDiv.append(editor);
@@ -20,32 +20,33 @@
         aceEditor.getSession().setMode("ace/mode/" + docInfo.type);
         aceEditor.setTheme("ace/theme/monokai");
         doc.attach_ace(aceEditor);
-        target = null;
-        component = null;
         if (docInfo.primary) {
           component = new HtmlRenderer({
             content: doc.snapshot
           });
-          target = $("#doc-container .rendered-source-html")[0];
-        } else if (docInfo.type === "css") {
-          cssDiv = $("<div>").prop("id", "content-" + docInfo.doc_id);
-          $("#doc-container .rendered-source-styles").append(cssDiv);
-          target = cssDiv[0];
-          component = new CssRenderer({
-            content: doc.snapshot
-          });
-        }
-        if (target && component) {
+          target = $("#doc-container .phork-html")[0];
           aceEditor.getSession().on("change", function(e) {
-            component.setProps({
-              content: aceEditor.getValue()
-            });
+            setTimeout((function() {
+              return component.setProps({
+                content: aceEditor.getValue()
+              });
+            }), 0);
             return true;
           });
-          delay = docInfo.primary ? 5000 : 0;
           return setTimeout((function() {
             return React.renderComponent(component, target);
-          }), delay);
+          }), 0);
+        } else if (docInfo.type === "css") {
+          component = new CssRenderer();
+          setTimeout((function() {
+            return component.update(docInfo.doc_id, doc.snapshot);
+          }), 0);
+          return aceEditor.getSession().on("change", function(e) {
+            setTimeout((function() {
+              return component.update(docInfo.doc_id, doc.snapshot);
+            }), 0);
+            return true;
+          });
         }
       });
     };

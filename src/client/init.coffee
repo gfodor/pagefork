@@ -18,25 +18,27 @@ $ ->
       aceEditor.setTheme("ace/theme/monokai")
       doc.attach_ace(aceEditor)
 
-      target = null
-      component = null
-
       if docInfo.primary
         component = new HtmlRenderer(content: doc.snapshot)
-        target = $("#doc-container .rendered-source-html")[0]
-      else if docInfo.type == "css"
-        cssDiv = $("<div>").prop("id", "content-#{docInfo.doc_id}")
-        $("#doc-container .rendered-source-styles").append(cssDiv)
-        target = cssDiv[0]
-        component = new CssRenderer(content: doc.snapshot)
+        target = $("#doc-container .phork-html")[0]
 
-      if target && component
         aceEditor.getSession().on "change", (e) ->
-          component.setProps(content: aceEditor.getValue())
+          setTimeout((-> component.setProps(content: aceEditor.getValue())), 0)
           true
 
-        delay = if docInfo.primary then 5000 else 0
-        setTimeout((-> React.renderComponent(component, target)), delay)
+        setTimeout((-> React.renderComponent(component, target)), 0)
+      else if docInfo.type == "css"
+        component = new CssRenderer()
+        setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)
+
+        aceEditor.getSession().on "change", (e) ->
+          setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)
+          true
+
+        #  cssDiv = $("<div>").prop("id", "content-#{docInfo.doc_id}")
+        #  $("#doc-container .rendered-source-styles").append(cssDiv)
+        #  target = cssDiv[0]
+        #  component = new CssRenderer(content: doc.snapshot)
 
   $.get "/phorks/#{phorkId}.json", dataType: "json", (res) ->
     socket = new BCSocket(null, {reconnect: true})

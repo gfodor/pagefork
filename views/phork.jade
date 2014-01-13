@@ -22,7 +22,8 @@ html
     script(src="/codemirror/mode/xml/xml.js")
     script(src="/codemirror/mode/htmlembedded/htmlembedded.js")
     script(src="/codemirror/mode/htmlmixed/htmlmixed.js")
-    script(type="text/jsx" src="/javascripts/rendering_components.js")
+    script(type="text/jsx" src="/javascripts/html_renderer.js")
+    script(type="text/jsx" src="/javascripts/css_renderer.js")
     // Note this has to come at the end because it introduces window.require :P
     script(src="/javascripts/less-1.5.0.min.js")
     link(rel="stylesheet" href="/codemirror/codemirror.css")
@@ -30,8 +31,8 @@ html
 
   body("data-phork-id"=phork_id)
     #doc-container
-      .rendered-source-styles
-      .rendered-source-html
+      .phork-styles
+      .phork-html
 
     #phork-ui
       .code
