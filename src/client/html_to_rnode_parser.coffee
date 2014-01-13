@@ -9,6 +9,7 @@ class HtmlToRNodeParser
     class: "className"
     frameborder: "frameBorder"
     cellpadding: "cellPadding"
+    colspan: "colSpan"
 
   htmlToRNode: (html) ->
     container = document.createElement('div')
@@ -32,14 +33,27 @@ class HtmlToRNodeParser
 
     rNodeAttributes = { key: rNodeKey }
     konstructor = React.DOM[tag] || React.DOM.div
-
+    styles = {}
+    
     for attribute in node.attributes
       attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name
 
       if attributeName == "style"
-        rNodeAttributes[attributeName] = this.parseStyles(attribute.value)
+        for selector, value of this.parseStyles(attribute.value)
+          styles[selector] = value
+      else if attributeName == "bgcolor"
+        styles["background-color"] = attribute.value
+      else if attributeName == "fgcolor"
+        styles["color"] = attribute.value
+      else if attributeName == "align"
+        styles["text-align"] = attribute.value
+      else if attributeName == "valign"
+        styles["vertical-align"] = attribute.value
       else
         rNodeAttributes[attributeName] = attribute.value
+
+    if _.keys(styles).length > 0
+      rNodeAttributes.style = styles
 
     childrenRNodes = []
 

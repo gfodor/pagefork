@@ -17,7 +17,8 @@
       "for": "htmlFor",
       "class": "className",
       frameborder: "frameBorder",
-      cellpadding: "cellPadding"
+      cellpadding: "cellPadding",
+      colspan: "colSpan"
     };
 
     HtmlToRNodeParser.prototype.htmlToRNode = function(html) {
@@ -41,7 +42,7 @@
     };
 
     HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey) {
-      var attribute, attributeName, childNode, childRNode, childrenRNodes, konstructor, rNodeAttributes, tag, _i, _j, _len, _len1, _ref, _ref1;
+      var attribute, attributeName, childNode, childRNode, childrenRNodes, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _len, _len1, _ref, _ref1, _ref2;
       tag = node.tagName.toLowerCase();
       if (tag === "script" || tag === "noscript") {
         return null;
@@ -50,20 +51,36 @@
         key: rNodeKey
       };
       konstructor = React.DOM[tag] || React.DOM.div;
+      styles = {};
       _ref = node.attributes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         attribute = _ref[_i];
         attributeName = ATTRIBUTE_MAPPING[attribute.name] || attribute.name;
         if (attributeName === "style") {
-          rNodeAttributes[attributeName] = this.parseStyles(attribute.value);
+          _ref1 = this.parseStyles(attribute.value);
+          for (selector in _ref1) {
+            value = _ref1[selector];
+            styles[selector] = value;
+          }
+        } else if (attributeName === "bgcolor") {
+          styles["background-color"] = attribute.value;
+        } else if (attributeName === "fgcolor") {
+          styles["color"] = attribute.value;
+        } else if (attributeName === "align") {
+          styles["text-align"] = attribute.value;
+        } else if (attributeName === "valign") {
+          styles["vertical-align"] = attribute.value;
         } else {
           rNodeAttributes[attributeName] = attribute.value;
         }
       }
+      if (_.keys(styles).length > 0) {
+        rNodeAttributes.style = styles;
+      }
       childrenRNodes = [];
-      _ref1 = node.childNodes;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        childNode = _ref1[_j];
+      _ref2 = node.childNodes;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        childNode = _ref2[_j];
         childRNode = this.rNodeFromNode(childNode, "rNode" + childrenRNodes.length);
         if (childRNode) {
           childrenRNodes[childrenRNodes.length] = childRNode;

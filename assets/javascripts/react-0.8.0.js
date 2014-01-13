@@ -5260,7 +5260,9 @@ var ReactDOM = objMapKeyVal({
   polyline: false,
   rect: false,
   svg: false,
-  text: false
+  text: false, 
+  // phork modified
+  center: true
 }, createDOMComponentClass);
 
 var injection = {

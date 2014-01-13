@@ -4,16 +4,7 @@
 
 var HtmlRenderer = React.createClass({
   render: function() {
-    var container = document.createElement('html')
-    container.innerHTML = this.props.content
-
-    var newBody = $("body", container);
-
-    if (newBody.length == 0) {
-      newBody = $(container);
-    }
-
-    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + newBody.html() + "</div>")
+    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + this.props.content + "</div>")
 
     return rnode;
   },

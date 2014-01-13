@@ -64,7 +64,16 @@ module.exports = class MHTMLIngestor
       $("link[rel='STYLESHEET']").remove()
 
       title = $("title").text()
-      htmltidy.tidy $("body").html() || "", { hideComments: true, indent: true }, (err, html) ->
+
+      tidyOps =
+        hideComments: true
+        indent: true
+        
+      tidyOps["logical-emphasis"] = true
+      tidyOps["output-html"] = true
+      tidyOps["show-body-only"] = true
+
+      htmltidy.tidy $("body").html() || "", tidyOps, (err, html) ->
         callback(null, { type: "html", name: documentName, primary: isPrimary, content: html  })
 
   getFiles: (dir, cb) ->
