@@ -32,7 +32,9 @@ var CssRenderer = React.createClass({
           return s.toCSS(); 
         }).join(",");
 
-        var rules = r.rules.map(function(r) { return "  " + r.toCSS({}); }).join("\n");
+        var rules = r.rules.map(function(r) { 
+          return "  " + r.toCSS({}) + ";"; 
+        }).join("\n");
 
         return ".rendered-source-html " + selector + " {\n" + rules + "\n}\n";
       };

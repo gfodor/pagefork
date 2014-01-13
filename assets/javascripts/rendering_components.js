@@ -18,8 +18,6 @@ var CssRenderer = React.createClass({
       var count = 0;
 
       var ruleSetToString = function(r, index) {
-        var printDebug = false;
-
         if (!r.selectors || !r.rules) {
           return "";
         }
@@ -28,18 +26,15 @@ var CssRenderer = React.createClass({
           _.each(s.elements, function(element) { 
             if (element.value == "body") {
               element.value = ".rendered-source-html-body";
-              printDebug = true;
             }
           });
 
           return s.toCSS(); 
         }).join(",");
 
-        var rules = r.rules.map(function(r) { return "  " + r.toCSS({}); }).join("\n");
-
-        if (printDebug) {
-          console.log(".rendered-source-html " + selector + " {\n" + rules + "\n}\n");
-        }
+        var rules = r.rules.map(function(r) { 
+          return "  " + r.toCSS({}) + ";"; 
+        }).join("\n");
 
         return ".rendered-source-html " + selector + " {\n" + rules + "\n}\n";
       };

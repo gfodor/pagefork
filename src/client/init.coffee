@@ -8,7 +8,7 @@ $ ->
 
     doc.whenReady ->
       codeDiv = $("<div>").prop("id", "code-#{docInfo.doc_id}")
-      editor = $("<div>").text(doc.snapshot)
+      editor = $("<div>")
       codeDiv.append(editor)
       $("#phork-ui .tabs").append(codeDiv)
 
