@@ -18,10 +18,10 @@ class HtmlToRNodeParser
     autocapitalize: "autoCapitalize"
 
   htmlToRNode: (html) ->
-    container = document.createElement('div')
+    container = document.createElement('html')
     container.innerHTML = html
 
-    this.rNodeFromNode(container, "rNodeRoot")
+    this.rNodeFromNode($("body", container)[0], "rNodeRoot")
 
   cleanHtml: (html) ->
     html.trim().replace(/<script(.|\s)*<\/script>/gim, '').replace(/<noscript(.|\s)*<\/noscript>/gim, '')
@@ -38,10 +38,12 @@ class HtmlToRNodeParser
 
   elementRNodeFromNode: (node, rNodeKey) ->
     tag = node.tagName.toLowerCase()
-    return null if tag == "script" || tag == "noscript"
+    return null if tag == "script" || tag == "noscript" || tag == "head"
 
+    isBody = tag == "body"
     rNodeAttributes = { key: rNodeKey }
-    konstructor = React.DOM[tag] || React.DOM.div
+    konstructor = (!isBody && React.DOM[tag]) || React.DOM.div
+
     styles = {}
     
     for attribute in node.attributes
@@ -55,7 +57,10 @@ class HtmlToRNodeParser
       else if attributeName == "fgcolor"
         styles["color"] = attribute.value
       else if attributeName == "align"
-        styles["text-align"] = attribute.value
+        if tag == "div" && attribute.value.toLowerCase() == "center"
+          konstructor = React.DOM.center
+        else
+          styles["text-align"] = attribute.value
       else if attributeName == "valign"
         styles["vertical-align"] = attribute.value
       else
@@ -63,6 +68,10 @@ class HtmlToRNodeParser
 
     if _.keys(styles).length > 0
       rNodeAttributes.style = styles
+
+    if isBody
+      rNodeAttributes.className ?= ""
+      rNodeAttributes.className += " phork-html-body"
 
     childrenRNodes = []
 

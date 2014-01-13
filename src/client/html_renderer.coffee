@@ -1,3 +1,3 @@
 window.HtmlRenderer = React.createClass
   render: ->
-    (new HtmlToRNodeParser()).htmlToRNode("<div class=\"phork-html-body\">" + this.props.content + "</div>")
+    (new HtmlToRNodeParser()).htmlToRNode(this.props.content)

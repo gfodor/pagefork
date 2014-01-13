@@ -3,7 +3,7 @@
 
   window.HtmlRenderer = React.createClass({
     render: function() {
-      return (new HtmlToRNodeParser()).htmlToRNode("<div class=\"phork-html-body\">" + this.props.content + "</div>");
+      return (new HtmlToRNodeParser()).htmlToRNode(this.props.content);
     }
   });
 

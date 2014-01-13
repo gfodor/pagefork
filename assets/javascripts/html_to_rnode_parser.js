@@ -29,9 +29,9 @@
 
     HtmlToRNodeParser.prototype.htmlToRNode = function(html) {
       var container;
-      container = document.createElement('div');
+      container = document.createElement('html');
       container.innerHTML = html;
-      return this.rNodeFromNode(container, "rNodeRoot");
+      return this.rNodeFromNode($("body", container)[0], "rNodeRoot");
     };
 
     HtmlToRNodeParser.prototype.cleanHtml = function(html) {
@@ -52,15 +52,16 @@
     };
 
     HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey) {
-      var attribute, attributeName, childNode, childRNode, childrenRNodes, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
       tag = node.tagName.toLowerCase();
-      if (tag === "script" || tag === "noscript") {
+      if (tag === "script" || tag === "noscript" || tag === "head") {
         return null;
       }
+      isBody = tag === "body";
       rNodeAttributes = {
         key: rNodeKey
       };
-      konstructor = React.DOM[tag] || React.DOM.div;
+      konstructor = (!isBody && React.DOM[tag]) || React.DOM.div;
       styles = {};
       _ref = node.attributes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -77,7 +78,11 @@
         } else if (attributeName === "fgcolor") {
           styles["color"] = attribute.value;
         } else if (attributeName === "align") {
-          styles["text-align"] = attribute.value;
+          if (tag === "div" && attribute.value.toLowerCase() === "center") {
+            konstructor = React.DOM.center;
+          } else {
+            styles["text-align"] = attribute.value;
+          }
         } else if (attributeName === "valign") {
           styles["vertical-align"] = attribute.value;
         } else {
@@ -87,10 +92,16 @@
       if (_.keys(styles).length > 0) {
         rNodeAttributes.style = styles;
       }
+      if (isBody) {
+        if ((_ref2 = rNodeAttributes.className) == null) {
+          rNodeAttributes.className = "";
+        }
+        rNodeAttributes.className += " phork-html-body";
+      }
       childrenRNodes = [];
-      _ref2 = node.childNodes;
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        childNode = _ref2[_j];
+      _ref3 = node.childNodes;
+      for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+        childNode = _ref3[_j];
         childRNode = this.rNodeFromNode(childNode, "rNode" + childrenRNodes.length);
         if (childRNode) {
           childrenRNodes[childrenRNodes.length] = childRNode;
