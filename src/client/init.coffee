@@ -1,8 +1,11 @@
 $ ->
-  docIds = []
   phorkId = $('body').data('phorkId')
+  readyDocs = 0
+  totalDocs = 0
 
   initDoc = (docInfo, sjs) ->
+    totalDocs += 1
+
     doc = sjs.get('docs', docInfo.doc_id)
     doc.subscribe()
 
@@ -26,10 +29,21 @@ $ ->
           setTimeout((-> component.setProps(content: aceEditor.getValue())), 0)
           true
 
-        setTimeout((-> React.renderComponent(component, target)), 0)
+        readyDocs += 1
+
+        showWhenReady = ->
+          if readyDocs >= totalDocs
+            React.renderComponent(component, target)
+          else
+            setTimeout(showWhenReady, 500)
+
+        showWhenReady()
       else if docInfo.type == "css"
         component = new CssRenderer()
-        setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)
+        setTimeout((->
+          component.update(docInfo.doc_id, doc.snapshot)
+          readyDocs += 1
+        ), 0)
 
         aceEditor.getSession().on "change", (e) ->
           setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)

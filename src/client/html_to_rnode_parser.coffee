@@ -31,7 +31,10 @@ class HtmlToRNodeParser
       when NODE_TYPE.ELEMENT
         this.elementRNodeFromNode(node, rNodeKey)
       when NODE_TYPE.TEXT
-        node.textContent
+        if node.textContent.trim().length > 0
+          React.DOM.text({}, node.textContent)
+        else
+          null
 
   elementRNodeFromNode: (node, rNodeKey) ->
     tag = node.tagName.toLowerCase()

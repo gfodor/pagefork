@@ -43,7 +43,11 @@
         case NODE_TYPE.ELEMENT:
           return this.elementRNodeFromNode(node, rNodeKey);
         case NODE_TYPE.TEXT:
-          return node.textContent;
+          if (node.textContent.trim().length > 0) {
+            return React.DOM.text({}, node.textContent);
+          } else {
+            return null;
+          }
       }
     };
 

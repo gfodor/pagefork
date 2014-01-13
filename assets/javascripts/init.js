@@ -2,15 +2,17 @@
 (function() {
 
   $(function() {
-    var docIds, initDoc, phorkId;
-    docIds = [];
+    var initDoc, phorkId, readyDocs, totalDocs;
     phorkId = $('body').data('phorkId');
+    readyDocs = 0;
+    totalDocs = 0;
     initDoc = function(docInfo, sjs) {
       var doc;
+      totalDocs += 1;
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, editor, target;
+        var aceEditor, codeDiv, component, editor, showWhenReady, target;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
         editor = $("<div>");
         codeDiv.append(editor);
@@ -33,13 +35,20 @@
             }), 0);
             return true;
           });
-          return setTimeout((function() {
-            return React.renderComponent(component, target);
-          }), 0);
+          readyDocs += 1;
+          showWhenReady = function() {
+            if (readyDocs >= totalDocs) {
+              return React.renderComponent(component, target);
+            } else {
+              return setTimeout(showWhenReady, 500);
+            }
+          };
+          return showWhenReady();
         } else if (docInfo.type === "css") {
           component = new CssRenderer();
           setTimeout((function() {
-            return component.update(docInfo.doc_id, doc.snapshot);
+            component.update(docInfo.doc_id, doc.snapshot);
+            return readyDocs += 1;
           }), 0);
           return aceEditor.getSession().on("change", function(e) {
             setTimeout((function() {
