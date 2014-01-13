@@ -35,7 +35,8 @@ $ ->
           component.setProps(content: aceEditor.getValue())
           true
 
-        setTimeout((-> React.renderComponent(component, target)), 0)
+        delay = if docInfo.primary then 5000 else 0
+        setTimeout((-> React.renderComponent(component, target)), delay)
 
   $.get "/phorks/#{phorkId}.json", dataType: "json", (res) ->
     socket = new BCSocket(null, {reconnect: true})

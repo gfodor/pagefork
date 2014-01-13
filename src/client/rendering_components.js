@@ -4,7 +4,7 @@
 
 var HtmlRenderer = React.createClass({
   render: function() {
-    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div>" + this.props.content + "</div>")
+    rnode = (new HtmlToRNodeParser()).htmlToRNode("<div class=\"rendered-source-html-body\">" + this.props.content + "</div>")
 
     return rnode;
   },
@@ -15,8 +15,9 @@ var CssRenderer = React.createClass({
     if (this.props.content) {
       var parser = new less.Parser();
       var ret = null;
+      var count = 0;
 
-      var ruleSetToString = function(r) {
+      var ruleSetToString = function(r, index) {
         if (!r.selectors || !r.rules) {
           return "";
         }
@@ -24,15 +25,16 @@ var CssRenderer = React.createClass({
         var selector = r.selectors.map(function(s) { 
           _.each(s.elements, function(element) { 
             if (element.value == "body") {
-              element.value = ".rendered-source-html";
+              element.value = ".rendered-source-html-body";
             }
           });
 
           return s.toCSS(); 
-        }).join(" ");
+        }).join(",");
 
         var rules = r.rules.map(function(r) { return "  " + r.toCSS({}); }).join("\n");
-        return selector + " {\n" + rules + "\n}\n";
+
+        return ".rendered-source-html " + selector + " {\n" + rules + "\n}\n";
       };
 
       parser.parse(this.props.content, function(err, tree) {
@@ -46,7 +48,7 @@ var CssRenderer = React.createClass({
               {tree.rules.map(function(r) {
                 return (
                   <style key={"rule_" + tree.rules.indexOf(r)}>
-                    {ruleSetToString(r)}
+                    {ruleSetToString(r, tree.rules.indexOf(r))}
                   </style>
                 );
               })}

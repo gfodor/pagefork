@@ -10,7 +10,7 @@
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, cssDiv, editor, target;
+        var aceEditor, codeDiv, component, cssDiv, delay, editor, target;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
         editor = $("<div>").text(doc.snapshot);
         codeDiv.append(editor);
@@ -42,9 +42,10 @@
             });
             return true;
           });
+          delay = docInfo.primary ? 5000 : 0;
           return setTimeout((function() {
             return React.renderComponent(component, target);
-          }), 0);
+          }), delay);
         }
       });
     };
