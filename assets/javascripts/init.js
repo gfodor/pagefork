@@ -10,15 +10,17 @@
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var codeDiv, codeMirror, component, cssDiv, target, textArea;
+        var aceEditor, codeDiv, component, cssDiv, editor, target;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
-        textArea = $("<textarea>").val(doc.snapshot);
-        codeDiv.append(textArea);
+        editor = $("<div>").text(doc.snapshot);
+        codeDiv.append(editor);
         $("#phork-ui .tabs").append(codeDiv);
-        codeMirror = CodeMirror.fromTextArea(textArea[0], {
-          mode: "text/" + docInfo.type
-        });
-        doc.attachCodeMirror(codeMirror);
+        aceEditor = ace.edit("code-" + docInfo.doc_id);
+        $("#code-" + docInfo.doc_id).addClass("code-editor");
+        aceEditor.getSession().setMode("ace/mode/" + docInfo.type);
+        aceEditor.setTheme("ace/theme/monokai");
+        console.log(aceEditor);
+        doc.attach_ace(aceEditor);
         target = null;
         component = null;
         if (docInfo.primary) {
@@ -35,10 +37,11 @@
           });
         }
         if (target && component) {
-          codeMirror.on("change", function(editor, change) {
-            return component.setProps({
-              content: editor.getValue()
+          aceEditor.getSession().on("change", function(e) {
+            component.setProps({
+              content: aceEditor.getValue()
             });
+            return true;
           });
           return setTimeout((function() {
             return React.renderComponent(component, target);

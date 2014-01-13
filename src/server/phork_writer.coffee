@@ -42,6 +42,3 @@ module.exports = class PhorkWriter
 
         collection = livedb.collection "docs"
         collection.submit doc_id, { v: 0, create: { type: 'text', data: doc.content } }, callback
- 
-  tableSuffix: ->
-    if process.env.NODE_ENV == "production" then "" else "_development"

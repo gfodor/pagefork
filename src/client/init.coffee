@@ -8,12 +8,16 @@ $ ->
 
     doc.whenReady ->
       codeDiv = $("<div>").prop("id", "code-#{docInfo.doc_id}")
-      textArea = $("<textarea>").val(doc.snapshot)
-      codeDiv.append(textArea)
+      editor = $("<div>").text(doc.snapshot)
+      codeDiv.append(editor)
       $("#phork-ui .tabs").append(codeDiv)
 
-      codeMirror = CodeMirror.fromTextArea(textArea[0], { mode: "text/#{docInfo.type}" })
-      doc.attachCodeMirror(codeMirror)
+      aceEditor = ace.edit("code-#{docInfo.doc_id}")
+      $("#code-#{docInfo.doc_id}").addClass("code-editor")
+      aceEditor.getSession().setMode("ace/mode/#{docInfo.type}")
+      aceEditor.setTheme("ace/theme/monokai")
+      console.log(aceEditor)
+      doc.attach_ace(aceEditor)
 
       target = null
       component = null
@@ -28,8 +32,9 @@ $ ->
         component = new CssRenderer(content: doc.snapshot)
 
       if target && component
-        codeMirror.on "change", (editor, change) ->
-          component.setProps(content: editor.getValue())
+        aceEditor.getSession().on "change", (e) ->
+          component.setProps(content: aceEditor.getValue())
+          true
 
         setTimeout((-> React.renderComponent(component, target)), 0)
 

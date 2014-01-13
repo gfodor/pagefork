@@ -9,6 +9,7 @@ class HtmlToRNodeParser
     class: "className"
     frameborder: "frameBorder"
     cellpadding: "cellPadding"
+    cellspacing: "cellSpacing"
     colspan: "colSpan"
 
   htmlToRNode: (html) ->

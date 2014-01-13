@@ -18,6 +18,7 @@
       "class": "className",
       frameborder: "frameBorder",
       cellpadding: "cellPadding",
+      cellspacing: "cellSpacing",
       colspan: "colSpan"
     };
 
