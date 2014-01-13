@@ -23,20 +23,15 @@ html
     // Note this has to come at the end because it introduces window.require :P
     script(src="/javascripts/less-1.5.0.min.js")
     link(rel="stylesheet" href="/codemirror/codemirror.css")
+    link(rel="stylesheet" href="/stylesheets/phork.css")
 
   body("data-phork-id"=phork_id)
-    #styles
-    #html
+    #doc-container
+      .styles
+      .html
+
+    #phork-ui
+      .code
+        .tabs
 
     script(src="/javascripts/init.js", type="text/jsx")
-
-    div(style="width:600px")
-      textarea#htmlEditor(rows=10, cols=60).
-        <div class="foo" style="color: orange;">Hello World</div>
-
-    div(style="width:600px")
-      textarea#cssEditor(rows=10, cols=20).
-        .foo {
-          background-color: red;
-          padding: 10px;
-        }

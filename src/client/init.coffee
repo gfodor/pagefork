@@ -2,48 +2,41 @@ $ ->
   docIds = []
   phorkId = $('body').data('phorkId')
 
+  initDoc = (docInfo, sjs) ->
+    doc = sjs.get('docs', docInfo.doc_id)
+    doc.subscribe()
+
+    doc.whenReady ->
+      codeDiv = $("<div>").prop("id", "code-#{docInfo.doc_id}")
+      textArea = $("<textarea>").val(doc.snapshot)
+      codeDiv.append(textArea)
+      $("#phork-ui .tabs").append(codeDiv)
+
+      codeMirror = CodeMirror.fromTextArea(textArea[0], { mode: "text/#{docInfo.type}" })
+      doc.attachCodeMirror(codeMirror)
+
+      target = null
+      component = null
+
+      if docInfo.primary
+        component = new HtmlRenderer(content: doc.snapshot)
+        target = $("#doc-container .html")[0]
+      else if docInfo.type == "css"
+        cssDiv = $("<div>").prop("id", "content-#{docInfo.doc_id}")
+        $("#doc-container .styles").append(cssDiv)
+        target = cssDiv[0]
+        component = new CssRenderer(content: doc.snapshot)
+
+      if target && component
+        codeMirror.on "change", (editor, change) ->
+          component.setProps(content: editor.getValue())
+
+        setTimeout((-> React.renderComponent(component, target)), 0)
+
   $.get "/phorks/#{phorkId}.json", dataType: "json", (res) ->
     socket = new BCSocket(null, {reconnect: true})
     sjs = new window.sharejs.Connection(socket)
 
     for docInfo in res.docs
-      if docInfo.primary
-        doc = sjs.get('docs', docInfo.doc_id)
-        doc.subscribe()
+      initDoc(docInfo, sjs)
 
-        doc.whenReady ->
-          codeMirror = CodeMirror.fromTextArea($("#htmlEditor")[0], { mode: "text/#{docInfo.type}" })
-          doc.attachCodeMirror(codeMirror)
-          component = new HtmlRenderer(content: doc.snapshot)
-
-          setTimeout(->
-            target = $("#html")[0]
-            React.renderComponent(component, $("#html")[0])
-          , 0)
-            
-      #if (!doc.type) doc.create('text')
-      #if (doc.type && doc.type.name === 'text')
-      #  doc.attachTextarea(elem)
-
-#  editorInfos = [
-#    { target: "#styles", mode: "text/css", editorSelector: "#cssEditor", component: CssRenderer },
-#    { target: "#html", mode: "text/html", editorSelector: "#htmlEditor", component: HtmlRenderer }
-#  ]
-#
-#  for editorInfo in editorInfos
-#    ((editorInfo) ->
-#      { target: target, mode: mode, editorSelector: editorSelector, component: component } = editorInfo
-#
-#      codeMirror = CodeMirror.fromTextArea($(editorSelector)[0], { mode: mode })
-#      window.codeEditors ?= {}
-#      window.codeEditors[editorSelector.replace("#", "")] = codeMirror
-#
-#      updateContent = (content) ->
-#        React.renderComponent(
-#          new component(content: content),
-#          $(target)[0])
-#      
-#      updateContent(codeMirror.getValue())
-#
-#      codeMirror.on "change", (editor, change) ->
-#        updateContent(editor.getValue()))(editorInfo)

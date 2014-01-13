@@ -2,13 +2,54 @@
 (function() {
 
   $(function() {
-    var docIds, phorkId;
+    var docIds, initDoc, phorkId;
     docIds = [];
     phorkId = $('body').data('phorkId');
+    initDoc = function(docInfo, sjs) {
+      var doc;
+      doc = sjs.get('docs', docInfo.doc_id);
+      doc.subscribe();
+      return doc.whenReady(function() {
+        var codeDiv, codeMirror, component, cssDiv, target, textArea;
+        codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
+        textArea = $("<textarea>").val(doc.snapshot);
+        codeDiv.append(textArea);
+        $("#phork-ui .tabs").append(codeDiv);
+        codeMirror = CodeMirror.fromTextArea(textArea[0], {
+          mode: "text/" + docInfo.type
+        });
+        doc.attachCodeMirror(codeMirror);
+        target = null;
+        component = null;
+        if (docInfo.primary) {
+          component = new HtmlRenderer({
+            content: doc.snapshot
+          });
+          target = $("#doc-container .html")[0];
+        } else if (docInfo.type === "css") {
+          cssDiv = $("<div>").prop("id", "content-" + docInfo.doc_id);
+          $("#doc-container .styles").append(cssDiv);
+          target = cssDiv[0];
+          component = new CssRenderer({
+            content: doc.snapshot
+          });
+        }
+        if (target && component) {
+          codeMirror.on("change", function(editor, change) {
+            return component.setProps({
+              content: editor.getValue()
+            });
+          });
+          return setTimeout((function() {
+            return React.renderComponent(component, target);
+          }), 0);
+        }
+      });
+    };
     return $.get("/phorks/" + phorkId + ".json", {
       dataType: "json"
     }, function(res) {
-      var doc, docInfo, sjs, socket, _i, _len, _ref, _results;
+      var docInfo, sjs, socket, _i, _len, _ref, _results;
       socket = new BCSocket(null, {
         reconnect: true
       });
@@ -17,27 +58,7 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         docInfo = _ref[_i];
-        if (docInfo.primary) {
-          doc = sjs.get('docs', docInfo.doc_id);
-          doc.subscribe();
-          _results.push(doc.whenReady(function() {
-            var codeMirror, component;
-            codeMirror = CodeMirror.fromTextArea($("#htmlEditor")[0], {
-              mode: "text/" + docInfo.type
-            });
-            doc.attachCodeMirror(codeMirror);
-            component = new HtmlRenderer({
-              content: doc.snapshot
-            });
-            return setTimeout(function() {
-              var target;
-              target = $("#html")[0];
-              return React.renderComponent(component, $("#html")[0]);
-            }, 0);
-          }));
-        } else {
-          _results.push(void 0);
-        }
+        _results.push(initDoc(docInfo, sjs));
       }
       return _results;
     });

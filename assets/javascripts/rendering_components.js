@@ -26,6 +26,10 @@ var CssRenderer = React.createClass({
       var ret = null;
 
       var ruleSetToString = function(r) {
+        if (!r.selectors || !r.rules) {
+          return "";
+        }
+
         var selector = r.selectors.map(function(s) { return s.toCSS(); }).join(" ");
         var rules = r.rules.map(function(r) { return "  " + r.toCSS({}); }).join("\n");
         return selector + " {\n" + rules + "\n}\n";

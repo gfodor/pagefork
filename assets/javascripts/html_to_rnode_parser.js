@@ -15,7 +15,9 @@
 
     ATTRIBUTE_MAPPING = {
       "for": "htmlFor",
-      "class": "className"
+      "class": "className",
+      frameborder: "frameBorder",
+      cellpadding: "cellPadding"
     };
 
     HtmlToRNodeParser.prototype.htmlToRNode = function(html) {

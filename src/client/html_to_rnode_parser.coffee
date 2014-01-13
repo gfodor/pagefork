@@ -7,6 +7,8 @@ class HtmlToRNodeParser
   ATTRIBUTE_MAPPING =
     for: "htmlFor"
     class: "className"
+    frameborder: "frameBorder"
+    cellpadding: "cellPadding"
 
   htmlToRNode: (html) ->
     container = document.createElement('div')
