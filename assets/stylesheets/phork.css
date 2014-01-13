@@ -15,13 +15,13 @@
   width: 100%;
 }
 
-#doc-container .html {
+#doc-container .rendered-source-html {
   padding: 0;
   margin: 0;
   width: 100%;
 }
 
-#doc-container .html>div {
+#doc-container .rendered-source-html>div {
   padding: 0;
   margin: 0;
   width: 100%;

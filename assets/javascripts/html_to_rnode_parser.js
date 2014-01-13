@@ -19,7 +19,12 @@
       frameborder: "frameBorder",
       cellpadding: "cellPadding",
       cellspacing: "cellSpacing",
-      colspan: "colSpan"
+      colspan: "colSpan",
+      tabindex: "tabIndex",
+      autocomplete: "autoComplete",
+      maxlength: "maxLength",
+      autocorrect: "autoCorrect",
+      autocapitalize: "autoCapitalize"
     };
 
     HtmlToRNodeParser.prototype.htmlToRNode = function(html) {

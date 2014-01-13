@@ -11,6 +11,11 @@ class HtmlToRNodeParser
     cellpadding: "cellPadding"
     cellspacing: "cellSpacing"
     colspan: "colSpan"
+    tabindex: "tabIndex"
+    autocomplete: "autoComplete"
+    maxlength: "maxLength"
+    autocorrect: "autoCorrect"
+    autocapitalize: "autoCapitalize"
 
   htmlToRNode: (html) ->
     container = document.createElement('div')

@@ -16,7 +16,6 @@ $ ->
       $("#code-#{docInfo.doc_id}").addClass("code-editor")
       aceEditor.getSession().setMode("ace/mode/#{docInfo.type}")
       aceEditor.setTheme("ace/theme/monokai")
-      console.log(aceEditor)
       doc.attach_ace(aceEditor)
 
       target = null
@@ -24,10 +23,10 @@ $ ->
 
       if docInfo.primary
         component = new HtmlRenderer(content: doc.snapshot)
-        target = $("#doc-container .html")[0]
+        target = $("#doc-container .rendered-source-html")[0]
       else if docInfo.type == "css"
         cssDiv = $("<div>").prop("id", "content-#{docInfo.doc_id}")
-        $("#doc-container .styles").append(cssDiv)
+        $("#doc-container .rendered-source-styles").append(cssDiv)
         target = cssDiv[0]
         component = new CssRenderer(content: doc.snapshot)
 
