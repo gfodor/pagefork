@@ -53,7 +53,7 @@
         }
         seenCsses = {};
         _.each(tree.rules, function(r) {
-          var candidateCurrentEntry, css, currentEntry, entries, hash, _i, _len;
+          var candidateCurrentEntry, css, currentEntry, entries, hash, node, _i, _len;
           css = ruleSetToString(r);
           hash = self.stringHash(css);
           if (css === "") {
@@ -84,19 +84,22 @@
             }
           }
           if (!currentEntry) {
-            console.log("push");
+            node = $("<style>").text(css);
+            $(".phork-styles").append(node);
             if (entries) {
               if (!_.isArray(entries)) {
                 entries = self.domMap[hash] = [entries];
               }
               return entries.push({
                 hash: hash,
-                css: css
+                css: css,
+                node: node
               });
             } else {
               return self.domMap[hash] = {
                 hash: hash,
-                css: css
+                css: css,
+                node: node
               };
             }
           }
@@ -119,11 +122,9 @@
               }
             }
             if (entriesToRemove.length > 0) {
-              console.log("nuke array");
-              console.log(entriesToRemove);
               for (_k = 0, _len2 = entriesToRemove.length; _k < _len2; _k++) {
                 entry = entriesToRemove[_k];
-                123;
+                $(entry.node).remove();
               }
               newEntries = _.reject(entries, function(e) {
                 return _.select(entriesToRemove, function(ee) {
@@ -140,6 +141,7 @@
             }
           } else {
             if (!seenCsses[entries.hash] || (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) || (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] !== entries.css)) {
+              $(entries.node).remove();
               _results.push(delete self.domMap[existingHash]);
             } else {
               _results.push(void 0);

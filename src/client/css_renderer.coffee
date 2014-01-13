@@ -62,15 +62,16 @@ window.CssRenderer = class CssRenderer
             currentEntry = entries if entries.css == css
 
         unless currentEntry
-          console.log "push"
+          node = $("<style>").text(css)
+          $(".phork-styles").append(node)
 
           if entries
             unless _.isArray(entries)
               entries = self.domMap[hash] = [entries]
 
-            entries.push({ hash: hash, css: css })
+            entries.push { hash: hash, css: css, node: node }
           else
-            self.domMap[hash] = { hash: hash, css: css }
+            self.domMap[hash] = { hash: hash, css: css, node: node }
 
       for existingHash in _.keys(self.domMap)
         entries = self.domMap[existingHash]
@@ -87,12 +88,8 @@ window.CssRenderer = class CssRenderer
               entriesToRemove.push(entry)
 
           if entriesToRemove.length > 0
-            console.log "nuke array"
-            console.log entriesToRemove
-
             for entry in entriesToRemove
-              123
-              # TODO DOM
+              $(entry.node).remove()
 
             newEntries = _.reject(entries, (e) -> _.select(entriesToRemove, (ee) -> ee.css == e.css).length > 0)
 
@@ -105,6 +102,6 @@ window.CssRenderer = class CssRenderer
              (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) ||
              (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] != entries.css)
 
-            # TODO DOM
+            $(entries.node).remove()
             delete self.domMap[existingHash]
 
