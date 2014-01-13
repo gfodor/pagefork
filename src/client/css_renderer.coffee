@@ -13,7 +13,7 @@ window.CssRenderer = class CssRenderer
       hash = ((hash << 5) - hash) + char
       hash |= 0
 
-    hash % 3
+    hash
 
   update: (doc_id, newCss) ->
     ruleSetToString = (r, index) ->

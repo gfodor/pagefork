@@ -21,7 +21,7 @@
         hash = ((hash << 5) - hash) + char;
         hash |= 0;
       }
-      return hash % 3;
+      return hash;
     };
 
     CssRenderer.prototype.update = function(doc_id, newCss) {
