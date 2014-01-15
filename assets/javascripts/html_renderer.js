@@ -3,7 +3,19 @@
 
   window.HtmlRenderer = React.createClass({
     render: function() {
-      return (new HtmlToRNodeParser()).htmlToRNode(this.props.content);
+      var newRNode, parser, _ref, _ref1;
+      parser = new HtmlToRNodeParser();
+      if ((_ref = this.bracketDiff) == null) {
+        this.bracketDiff = parser.getBracketDiff(this.props.content);
+      }
+      if ((_ref1 = this.tagDiff) == null) {
+        this.tagDiff = parser.getTagDiff(this.props.content);
+      }
+      newRNode = parser.htmlToRNode(this.props.content, this.bracketDiff, this.tagDiff);
+      if (newRNode) {
+        this.reactRootNode = newRNode;
+      }
+      return this.reactRootNode;
     }
   });
 

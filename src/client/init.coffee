@@ -23,10 +23,36 @@ $ ->
 
       if docInfo.primary
         component = new HtmlRenderer(content: doc.snapshot)
+
         target = $("#doc-container .phork-html")[0]
+        testComponent = null
+        testCount = 0
+
+        resetTest = ->
+          testComponent.unmountComponent() if testComponent
+
+          ((id) -> setTimeout((-> $(id).remove()), 0))("#phork-test-#{testCount}")
+
+          testTargetSel = $("<div>").addClass("phork-html-test").attr("id", "phork-test-#{++testCount}")
+          $("#doc-container").append(testTargetSel)
+          testComponent = new HtmlRenderer content: "<div>hello</div>"
+          React.renderComponent(testComponent, testTargetSel[0])
 
         aceEditor.getSession().on "change", (e) ->
-          setTimeout((-> component.setProps(content: aceEditor.getValue())), 0)
+          f = ->
+            try
+              html = aceEditor.getValue()
+              #testComponent.setProps content: html
+              console.log "ok"
+              component.setProps content: html
+            catch e
+              console.log(" stop")
+              console.log(e.stack)
+              component.forceUpdate()
+              #setTimeout((-> resetTest()), 0)
+
+          setTimeout(f, 0)
+
           true
 
         readyDocs += 1
@@ -34,6 +60,7 @@ $ ->
         showWhenReady = ->
           if readyDocs >= totalDocs
             React.renderComponent(component, target)
+            resetTest()
           else
             setTimeout(showWhenReady, 500)
 

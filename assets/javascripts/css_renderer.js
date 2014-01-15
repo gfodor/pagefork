@@ -37,16 +37,16 @@
               return element.value = ".phork-html-body";
             }
           });
-          return s.toCSS();
+          return ".phork-html " + (s.toCSS());
         }).join(",");
         rules = _.map(r.rules, function(r) {
           return "  " + (r.toCSS({})) + ";";
         }).join("\n");
-        return ".phork-html " + selector + " {\n" + rules + "\n}\n";
+        return selector + " {\n" + rules + "\n}\n";
       };
       parser = new less.Parser();
       self = this;
-      return parser.parse(newCss, function(err, tree) {
+      return parser.parse(newCss || "", function(err, tree) {
         var entries, entriesToRemove, entry, existingHash, newEntries, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
         if (err) {
           return;

@@ -27,8 +27,35 @@
       autocapitalize: "autoCapitalize"
     };
 
-    HtmlToRNodeParser.prototype.htmlToRNode = function(html) {
+    HtmlToRNodeParser.prototype.getBracketDiff = function(html) {
+      return html.replace(/[^<]/g, "").length - html.replace(/[^>]/g, "").length;
+    };
+
+    HtmlToRNodeParser.prototype.getTagDiff = function(html) {
+      var close, open, tag, _i, _len, _ref;
+      open = 0;
+      close = 0;
+      _ref = html.match(/(<[^>]+>)/ig);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tag = _ref[_i];
+        if (/^<\s*\//.test(tag) || /\/\s*>$/.test(tag)) {
+          close += 1;
+        } else {
+          open += 1;
+        }
+      }
+      console.log("open " + open + " close " + close + " " + (open - close));
+      return open - close;
+    };
+
+    HtmlToRNodeParser.prototype.htmlToRNode = function(html, previousBracketDiff, previousTagDiff) {
       var container;
+      if (this.getBracketDiff(html) !== previousBracketDiff) {
+        return null;
+      }
+      if (this.getTagDiff(html) !== previousTagDiff) {
+        return null;
+      }
       container = document.createElement('html');
       container.innerHTML = html;
       return this.rNodeFromNode($("body", container)[0], "rNodeRoot");

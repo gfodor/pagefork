@@ -23,19 +23,19 @@ window.CssRenderer = class CssRenderer
         _.each s.elements, (element) ->
           element.value = ".phork-html-body" if element.value == "body"
 
-        s.toCSS()
+        ".phork-html #{s.toCSS()}"
       ).join(",")
 
       rules = _.map(r.rules, (r) ->
         "  #{r.toCSS({})};"
       ).join("\n")
 
-      ".phork-html " + selector + " {\n" + rules + "\n}\n"
+      selector + " {\n" + rules + "\n}\n"
 
     parser = new less.Parser()
     self = this
 
-    parser.parse newCss, (err, tree) ->
+    parser.parse newCss || "", (err, tree) ->
       return if err
 
       seenCsses = {}
