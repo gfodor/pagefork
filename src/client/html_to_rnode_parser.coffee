@@ -17,25 +17,7 @@ class HtmlToRNodeParser
     autocorrect: "autoCorrect"
     autocapitalize: "autoCapitalize"
 
-  getBracketDiff: (html) ->
-    html.replace(/[^<]/g, "").length - html.replace(/[^>]/g, "").length
-
-  getTagDiff: (html) ->
-    open = 0
-    close = 0
-
-    for tag in html.match(/(<[^>]+>)/ig)
-      if /^<\s*\//.test(tag) || /\/\s*>$/.test(tag)
-        close += 1
-      else
-        open += 1
-
-    console.log("open #{open} close #{close} #{open - close}")
-    open - close
-
   htmlToRNode: (html, previousBracketDiff, previousTagDiff) ->
-    return null unless this.getBracketDiff(html) == previousBracketDiff
-    return null unless this.getTagDiff(html) == previousTagDiff
     container = document.createElement('html')
     container.innerHTML = html
     this.rNodeFromNode($("body", container)[0], "rNodeRoot")

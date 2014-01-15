@@ -22,36 +22,13 @@ $ ->
       doc.attach_ace(aceEditor)
 
       if docInfo.primary
-        component = new HtmlRenderer(content: doc.snapshot)
-
-        target = $("#doc-container .phork-html")[0]
-        testComponent = null
-        testCount = 0
-
-        resetTest = ->
-          testComponent.unmountComponent() if testComponent
-
-          ((id) -> setTimeout((-> $(id).remove()), 0))("#phork-test-#{testCount}")
-
-          testTargetSel = $("<div>").addClass("phork-html-test").attr("id", "phork-test-#{++testCount}")
-          $("#doc-container").append(testTargetSel)
-          testComponent = new HtmlRenderer content: "<div>hello</div>"
-          React.renderComponent(testComponent, testTargetSel[0])
-
         aceEditor.getSession().on "change", (e) ->
-          f = ->
-            try
-              html = aceEditor.getValue()
-              #testComponent.setProps content: html
-              console.log "ok"
-              component.setProps content: html
-            catch e
-              console.log(" stop")
-              console.log(e.stack)
-              component.forceUpdate()
-              #setTimeout((-> resetTest()), 0)
+          component = new HtmlRenderer(content: aceEditor.getValue())
 
-          setTimeout(f, 0)
+          try
+            React.renderComponentToString component, (html) ->
+              $("#doc-container .phork-html").html(html)
+          catch e
 
           true
 
@@ -59,8 +36,14 @@ $ ->
 
         showWhenReady = ->
           if readyDocs >= totalDocs
-            React.renderComponent(component, target)
-            resetTest()
+            setTimeout((->
+              component = new HtmlRenderer(content: doc.snapshot)
+
+              try
+                React.renderComponentToString component, (html) ->
+                  $("#doc-container .phork-html").html(html)
+              catch e
+            ), 0)
           else
             setTimeout(showWhenReady, 500)
 

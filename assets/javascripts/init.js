@@ -12,7 +12,7 @@
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, editor, resetTest, showWhenReady, target, testComponent, testCount;
+        var aceEditor, codeDiv, component, editor, showWhenReady;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
         editor = $("<div>");
         codeDiv.append(editor);
@@ -23,53 +23,36 @@
         aceEditor.setTheme("ace/theme/monokai");
         doc.attach_ace(aceEditor);
         if (docInfo.primary) {
-          component = new HtmlRenderer({
-            content: doc.snapshot
-          });
-          target = $("#doc-container .phork-html")[0];
-          testComponent = null;
-          testCount = 0;
-          resetTest = function() {
-            var testTargetSel;
-            if (testComponent) {
-              testComponent.unmountComponent();
-            }
-            (function(id) {
-              return setTimeout((function() {
-                return $(id).remove();
-              }), 0);
-            })("#phork-test-" + testCount);
-            testTargetSel = $("<div>").addClass("phork-html-test").attr("id", "phork-test-" + (++testCount));
-            $("#doc-container").append(testTargetSel);
-            testComponent = new HtmlRenderer({
-              content: "<div>hello</div>"
-            });
-            return React.renderComponent(testComponent, testTargetSel[0]);
-          };
           aceEditor.getSession().on("change", function(e) {
-            var f;
-            f = function() {
-              var html;
-              try {
-                html = aceEditor.getValue();
-                console.log("ok");
-                return component.setProps({
-                  content: html
-                });
-              } catch (e) {
-                console.log(" stop");
-                console.log(e.stack);
-                return component.forceUpdate();
-              }
-            };
-            setTimeout(f, 0);
+            var component;
+            component = new HtmlRenderer({
+              content: aceEditor.getValue()
+            });
+            try {
+              React.renderComponentToString(component, function(html) {
+                return $("#doc-container .phork-html").html(html);
+              });
+            } catch (e) {
+
+            }
             return true;
           });
           readyDocs += 1;
           showWhenReady = function() {
             if (readyDocs >= totalDocs) {
-              React.renderComponent(component, target);
-              return resetTest();
+              return setTimeout((function() {
+                var component;
+                component = new HtmlRenderer({
+                  content: doc.snapshot
+                });
+                try {
+                  return React.renderComponentToString(component, function(html) {
+                    return $("#doc-container .phork-html").html(html);
+                  });
+                } catch (e) {
+
+                }
+              }), 0);
             } else {
               return setTimeout(showWhenReady, 500);
             }
