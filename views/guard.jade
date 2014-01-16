@@ -1,0 +1,16 @@
+doctype
+
+html
+  head
+    title= "Phork " + phork_id
+    script(src="http://code.jquery.com/jquery-1.10.0.min.js")
+    script(src="/javascripts/underscore.js")
+    script(src="/javascripts/react-0.8.0.js")
+    script(src="/javascripts/html_to_rnode_parser.js")
+    script(type="text/javascript" src="/javascripts/html_renderer.js")
+
+  body("data-phork-id"=phork_id)
+    #doc-container
+      .phork-html
+
+    script(src="/javascripts/guard.js", type="text/javascript")

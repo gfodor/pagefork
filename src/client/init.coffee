@@ -2,6 +2,50 @@ $ ->
   phorkId = $('body').data('phorkId')
   readyDocs = 0
   totalDocs = 0
+  htmlVersion = 0
+
+  guardCount = 0
+  guardFrame = null
+  primaryComponent = null
+  primaryAceEditor = null
+
+  resetGuard = ->
+    return if guardFrame && !guardFrame.isReady?
+
+    $(".phork-guard").unbind("ready").remove()
+
+    $guardFrame = $("<iframe>")
+    $guardFrame.attr
+      src: "/guard"
+      class: "phork-guard"
+      id: "phork-guard-#{guardCount++}"
+
+    guardFrame = $guardFrame[0]
+    $("body").append($guardFrame)
+
+  resetGuard()
+
+  updateDOMAfterGuard = ->
+    if guardFrame && guardFrame.isReady?
+      msg =
+        beforeHtml: primaryComponent.props.content
+        afterHtml: primaryAceEditor.getValue()
+        version: ++htmlVersion
+
+      guardFrame.contentWindow.postMessage(JSON.stringify(msg), "*")
+
+  window.addEventListener "message", (e) ->
+    data = JSON.parse(e.data)
+
+    if data.type == "guard"
+      if data.result
+        if data.version == htmlVersion
+          primaryComponent.setProps(content: data.afterHtml)
+      else
+        resetGuard()
+    else if data.type == "guardReady"
+      if guardFrame && e.source == guardFrame.contentWindow
+        guardFrame.isReady = true
 
   initDoc = (docInfo, sjs) ->
     totalDocs += 1
@@ -22,14 +66,11 @@ $ ->
       doc.attach_ace(aceEditor)
 
       if docInfo.primary
+        primaryComponent = new HtmlRenderer(content: doc.snapshot)
+        primaryAceEditor = aceEditor
+
         aceEditor.getSession().on "change", (e) ->
-          component = new HtmlRenderer(content: aceEditor.getValue())
-
-          try
-            React.renderComponentToString component, (html) ->
-              $("#doc-container .phork-html").html(html)
-          catch e
-
+          updateDOMAfterGuard()
           true
 
         readyDocs += 1
@@ -37,12 +78,7 @@ $ ->
         showWhenReady = ->
           if readyDocs >= totalDocs
             setTimeout((->
-              component = new HtmlRenderer(content: doc.snapshot)
-
-              try
-                React.renderComponentToString component, (html) ->
-                  $("#doc-container .phork-html").html(html)
-              catch e
+              React.renderComponent primaryComponent, $("#doc-container .phork-html")[0]
             ), 0)
           else
             setTimeout(showWhenReady, 500)
@@ -50,6 +86,7 @@ $ ->
         showWhenReady()
       else if docInfo.type == "css"
         component = new CssRenderer()
+
         setTimeout((->
           component.update(docInfo.doc_id, doc.snapshot)
           readyDocs += 1
@@ -58,11 +95,6 @@ $ ->
         aceEditor.getSession().on "change", (e) ->
           setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)
           true
-
-        #  cssDiv = $("<div>").prop("id", "content-#{docInfo.doc_id}")
-        #  $("#doc-container .rendered-source-styles").append(cssDiv)
-        #  target = cssDiv[0]
-        #  component = new CssRenderer(content: doc.snapshot)
 
   $.get "/phorks/#{phorkId}.json", dataType: "json", (res) ->
     socket = new BCSocket(null, {reconnect: true})

@@ -2,10 +2,61 @@
 (function() {
 
   $(function() {
-    var initDoc, phorkId, readyDocs, totalDocs;
+    var guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, resetGuard, totalDocs, updateDOMAfterGuard;
     phorkId = $('body').data('phorkId');
     readyDocs = 0;
     totalDocs = 0;
+    htmlVersion = 0;
+    guardCount = 0;
+    guardFrame = null;
+    primaryComponent = null;
+    primaryAceEditor = null;
+    resetGuard = function() {
+      var $guardFrame;
+      if (guardFrame && (guardFrame.isReady == null)) {
+        return;
+      }
+      $(".phork-guard").unbind("ready").remove();
+      $guardFrame = $("<iframe>");
+      $guardFrame.attr({
+        src: "/guard",
+        "class": "phork-guard",
+        id: "phork-guard-" + (guardCount++)
+      });
+      guardFrame = $guardFrame[0];
+      return $("body").append($guardFrame);
+    };
+    resetGuard();
+    updateDOMAfterGuard = function() {
+      var msg;
+      if (guardFrame && (guardFrame.isReady != null)) {
+        msg = {
+          beforeHtml: primaryComponent.props.content,
+          afterHtml: primaryAceEditor.getValue(),
+          version: ++htmlVersion
+        };
+        return guardFrame.contentWindow.postMessage(JSON.stringify(msg), "*");
+      }
+    };
+    window.addEventListener("message", function(e) {
+      var data;
+      data = JSON.parse(e.data);
+      if (data.type === "guard") {
+        if (data.result) {
+          if (data.version === htmlVersion) {
+            return primaryComponent.setProps({
+              content: data.afterHtml
+            });
+          }
+        } else {
+          return resetGuard();
+        }
+      } else if (data.type === "guardReady") {
+        if (guardFrame && e.source === guardFrame.contentWindow) {
+          return guardFrame.isReady = true;
+        }
+      }
+    });
     initDoc = function(docInfo, sjs) {
       var doc;
       totalDocs += 1;
@@ -23,35 +74,19 @@
         aceEditor.setTheme("ace/theme/monokai");
         doc.attach_ace(aceEditor);
         if (docInfo.primary) {
+          primaryComponent = new HtmlRenderer({
+            content: doc.snapshot
+          });
+          primaryAceEditor = aceEditor;
           aceEditor.getSession().on("change", function(e) {
-            var component;
-            component = new HtmlRenderer({
-              content: aceEditor.getValue()
-            });
-            try {
-              React.renderComponentToString(component, function(html) {
-                return $("#doc-container .phork-html").html(html);
-              });
-            } catch (e) {
-
-            }
+            updateDOMAfterGuard();
             return true;
           });
           readyDocs += 1;
           showWhenReady = function() {
             if (readyDocs >= totalDocs) {
               return setTimeout((function() {
-                var component;
-                component = new HtmlRenderer({
-                  content: doc.snapshot
-                });
-                try {
-                  return React.renderComponentToString(component, function(html) {
-                    return $("#doc-container .phork-html").html(html);
-                  });
-                } catch (e) {
-
-                }
+                return React.renderComponent(primaryComponent, $("#doc-container .phork-html")[0]);
               }), 0);
             } else {
               return setTimeout(showWhenReady, 500);

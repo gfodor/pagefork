@@ -37,3 +37,9 @@ body {
   width: 100%;
   height: 120px;
 }
+
+.phork-guard {
+  width: 1px;
+  height: 1px;
+  display: none;
+}

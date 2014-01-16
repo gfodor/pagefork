@@ -6,27 +6,18 @@ html
     script(src="http://code.jquery.com/jquery-1.10.0.min.js")
     script(src="/javascripts/underscore.js")
     script(src="/javascripts/react-0.8.0.js")
-    script(src="/javascripts/JSXTransformer-0.8.0.js")
     script(src="/javascripts/html_to_rnode_parser.js")
     script(src="/javascripts/observe_dom.js")
     script(src="/javascripts/text.js")
     script(src="/javascripts/json0.js")
     script(src="/ace/ace.js")
     script(src="/javascripts/share.js")
-    script(src="/javascripts/share-codemirror.js")
     script(src="/javascripts/share-ace.js")
     script(src="/javascripts/bcsocket.js")
-    script(src="/codemirror/codemirror.js")
-    script(src="/codemirror/mode/css/css.js")
-    script(src="/codemirror/mode/javascript/javascript.js")
-    script(src="/codemirror/mode/xml/xml.js")
-    script(src="/codemirror/mode/htmlembedded/htmlembedded.js")
-    script(src="/codemirror/mode/htmlmixed/htmlmixed.js")
-    script(type="text/jsx" src="/javascripts/html_renderer.js")
-    script(type="text/jsx" src="/javascripts/css_renderer.js")
+    script(type="text/javascript" src="/javascripts/html_renderer.js")
+    script(type="text/javascript" src="/javascripts/css_renderer.js")
     // Note this has to come at the end because it introduces window.require :P
     script(src="/javascripts/less-1.5.0.min.js")
-    link(rel="stylesheet" href="/codemirror/codemirror.css")
     link(rel="stylesheet" href="/stylesheets/phork.css")
 
   body("data-phork-id"=phork_id)
@@ -38,4 +29,4 @@ html
       .code
         .tabs
 
-    script(src="/javascripts/init.js", type="text/jsx")
+    script(src="/javascripts/init.js", type="text/javascript")
