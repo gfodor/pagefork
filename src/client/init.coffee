@@ -8,6 +8,7 @@ $ ->
   guardFrame = null
   primaryComponent = null
   primaryAceEditor = null
+  docUpdateTimeouts = {}
 
   resetGuard = ->
     return if guardFrame && !guardFrame.isReady?
@@ -70,7 +71,10 @@ $ ->
         primaryAceEditor = aceEditor
 
         aceEditor.getSession().on "change", (e) ->
-          updateDOMAfterGuard()
+          updateTimeout = docUpdateTimeouts[docInfo.doc_id]
+          clearTimeout(updateTimeout) if updateTimeout
+
+          docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250)
           true
 
         readyDocs += 1
@@ -93,7 +97,10 @@ $ ->
         ), 0)
 
         aceEditor.getSession().on "change", (e) ->
-          setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 0)
+          updateTimeout = docUpdateTimeouts[docInfo.doc_id]
+          clearTimeout(updateTimeout) if updateTimeout
+
+          docUpdateTimeouts[docInfo.doc_id] = setTimeout((-> component.update(docInfo.doc_id, doc.snapshot)), 250)
           true
 
   $.get "/phorks/#{phorkId}.json", dataType: "json", (res) ->

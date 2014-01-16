@@ -2,7 +2,7 @@
 (function() {
 
   $(function() {
-    var guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, resetGuard, totalDocs, updateDOMAfterGuard;
+    var docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, resetGuard, totalDocs, updateDOMAfterGuard;
     phorkId = $('body').data('phorkId');
     readyDocs = 0;
     totalDocs = 0;
@@ -11,6 +11,7 @@
     guardFrame = null;
     primaryComponent = null;
     primaryAceEditor = null;
+    docUpdateTimeouts = {};
     resetGuard = function() {
       var $guardFrame;
       if (guardFrame && (guardFrame.isReady == null)) {
@@ -79,7 +80,12 @@
           });
           primaryAceEditor = aceEditor;
           aceEditor.getSession().on("change", function(e) {
-            updateDOMAfterGuard();
+            var updateTimeout;
+            updateTimeout = docUpdateTimeouts[docInfo.doc_id];
+            if (updateTimeout) {
+              clearTimeout(updateTimeout);
+            }
+            docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250);
             return true;
           });
           readyDocs += 1;
@@ -100,9 +106,14 @@
             return readyDocs += 1;
           }), 0);
           return aceEditor.getSession().on("change", function(e) {
-            setTimeout((function() {
+            var updateTimeout;
+            updateTimeout = docUpdateTimeouts[docInfo.doc_id];
+            if (updateTimeout) {
+              clearTimeout(updateTimeout);
+            }
+            docUpdateTimeouts[docInfo.doc_id] = setTimeout((function() {
               return component.update(docInfo.doc_id, doc.snapshot);
-            }), 0);
+            }), 250);
             return true;
           });
         }
