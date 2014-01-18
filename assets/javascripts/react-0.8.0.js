@@ -5271,7 +5271,7 @@ var ReactDOM = objMapKeyVal({
   svg: false,
   text: false, 
   // gfodor
-  center: true
+  center: false
 }, createDOMComponentClass);
 
 var injection = {
