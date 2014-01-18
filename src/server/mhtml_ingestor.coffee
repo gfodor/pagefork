@@ -66,9 +66,6 @@ module.exports = class MHTMLIngestor
     #  catch f
 
     css = cssbeautify css, { indent: '  ' }
-    # Fix missing quotes for font family
-    # Remove !important
-    css = css.replace(/!important/gi, "")
     css = css.replace(/!ie[0-9]?/gi, "")
 
     # Fix '@  page'
@@ -101,8 +98,9 @@ module.exports = class MHTMLIngestor
 
       bodyHtml = $("body").html() || ""
       $("body").empty()
+      $("body").addClass($("html").attr("class") || "")
+
       bodyTag = $("body").toString().replace("</body>", "")
-      bodyClass = $("body").attr("class") || ""
 
       tidyOps =
         hideComments: true

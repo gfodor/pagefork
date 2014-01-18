@@ -36,7 +36,10 @@
         selectorCss = _.map(ruleSet.selectors, function(s) {
           _.each(s.elements, function(element) {
             if (element.value === "body") {
-              return element.value = ".phork-html-body";
+              element.value = ".phork-html-body";
+            }
+            if (element.value === "html") {
+              return element.value = "";
             }
           });
           return ".phork-html " + (s.toCSS());

@@ -25,6 +25,7 @@ window.CssRenderer = class CssRenderer
       selectorCss = _.map(ruleSet.selectors, (s) ->
         _.each s.elements, (element) ->
           element.value = ".phork-html-body" if element.value == "body"
+          element.value = "" if element.value == "html"
 
         ".phork-html #{s.toCSS()}"
       ).join(",")
