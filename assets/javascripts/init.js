@@ -2,7 +2,7 @@
 (function() {
 
   $(function() {
-    var docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, reflow, resetGuard, totalDocs, updateDOMAfterGuard;
+    var docReflowTimeouts, docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, reflow, resetGuard, totalDocs, updateDOMAfterGuard;
     phorkId = $('body').data('phorkId');
     readyDocs = 0;
     totalDocs = 0;
@@ -12,15 +12,18 @@
     primaryComponent = null;
     primaryAceEditor = null;
     docUpdateTimeouts = {};
+    docReflowTimeouts = {};
     reflow = function() {
-      var content;
+      var content, s;
       content = primaryComponent.props.content;
+      s = $(window).scrollTop();
       primaryComponent.setProps({
         content: "<div></div>"
       });
-      return primaryComponent.setProps({
+      primaryComponent.setProps({
         content: content
       });
+      return $(window).scrollTop(s);
     };
     resetGuard = function() {
       var $guardFrame;
@@ -90,12 +93,17 @@
           });
           primaryAceEditor = aceEditor;
           aceEditor.getSession().on("change", function(e) {
-            var updateTimeout;
+            var reflowTimeout, updateTimeout;
             updateTimeout = docUpdateTimeouts[docInfo.doc_id];
             if (updateTimeout) {
               clearTimeout(updateTimeout);
             }
             docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250);
+            reflowTimeout = docReflowTimeouts[docInfo.doc_id];
+            if (reflowTimeout) {
+              clearTimeout(reflowTimeout);
+            }
+            docReflowTimeouts[docInfo.doc_id] = setTimeout(reflow, 2500);
             return true;
           });
           readyDocs += 1;

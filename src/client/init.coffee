@@ -9,12 +9,14 @@ $ ->
   primaryComponent = null
   primaryAceEditor = null
   docUpdateTimeouts = {}
+  docReflowTimeouts = {}
 
   reflow = ->
-    # TODO add button to UI i guess?
     content = primaryComponent.props.content
+    s = $(window).scrollTop()
     primaryComponent.setProps(content: "<div></div>")
     primaryComponent.setProps(content: content)
+    $(window).scrollTop(s)
 
   resetGuard = ->
     return if guardFrame && !guardFrame.isReady?
@@ -79,8 +81,11 @@ $ ->
         aceEditor.getSession().on "change", (e) ->
           updateTimeout = docUpdateTimeouts[docInfo.doc_id]
           clearTimeout(updateTimeout) if updateTimeout
-
           docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250)
+
+          reflowTimeout = docReflowTimeouts[docInfo.doc_id]
+          clearTimeout(reflowTimeout) if reflowTimeout
+          docReflowTimeouts[docInfo.doc_id] = setTimeout(reflow, 2500)
           true
 
         readyDocs += 1

@@ -45,8 +45,8 @@ window.CssRenderer = class CssRenderer
 
     parser.parse newCss || "", (err, tree) ->
       if err
-        console.log newCss
-        console.log err
+        #console.log newCss
+        #console.log err
         return
 
       seenCsses = {}
