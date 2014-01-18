@@ -37,7 +37,6 @@ window.CssRenderer = class CssRenderer
 
       css = selector + "  {\n" + rules + "\n}\n"
       css = "@media #{m.features.toCSS({})} {\n#{css}\n}" if m
-
       css
 
     parser.parse newCss || "", (err, tree) ->
