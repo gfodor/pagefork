@@ -49,6 +49,7 @@ module.exports = class MHTMLIngestor
 
     fs.readFile path, 'utf8', (err, data) ->
       css = cssbeautify data, { indent: '  ' }
+      css = css.replace(/@\s+/g, "@")
       callback(null, { type: "css", name: documentName, content: css })
     
   htmlDocumentForPath: (path, isPrimary, callback) ->

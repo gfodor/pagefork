@@ -2,7 +2,7 @@
 (function() {
 
   $(function() {
-    var docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, resetGuard, totalDocs, updateDOMAfterGuard;
+    var docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, reflow, resetGuard, totalDocs, updateDOMAfterGuard;
     phorkId = $('body').data('phorkId');
     readyDocs = 0;
     totalDocs = 0;
@@ -12,6 +12,16 @@
     primaryComponent = null;
     primaryAceEditor = null;
     docUpdateTimeouts = {};
+    reflow = function() {
+      var content;
+      content = primaryComponent.props.content;
+      primaryComponent.setProps({
+        content: "<div></div>"
+      });
+      return primaryComponent.setProps({
+        content: content
+      });
+    };
     resetGuard = function() {
       var $guardFrame;
       if (guardFrame && (guardFrame.isReady == null)) {
@@ -64,7 +74,7 @@
       doc = sjs.get('docs', docInfo.doc_id);
       doc.subscribe();
       return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, editor, showWhenReady;
+        var aceEditor, codeDiv, component, editor, showWhenReady, styleContainer;
         codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
         editor = $("<div>");
         codeDiv.append(editor);
@@ -100,11 +110,15 @@
           };
           return showWhenReady();
         } else if (docInfo.type === "css") {
-          component = new CssRenderer();
-          setTimeout((function() {
-            component.update(docInfo.doc_id, doc.snapshot);
-            return readyDocs += 1;
-          }), 0);
+          styleContainer = $("<div>").attr("id", "styles-" + docInfo.doc_id)[0];
+          $(".phork-styles").append(styleContainer);
+          component = new CssRenderer(styleContainer);
+          (function(component, docInfo, doc) {
+            return setTimeout((function() {
+              component.update(docInfo.doc_id, doc.snapshot);
+              return readyDocs += 1;
+            }), 0);
+          })(component, docInfo, doc);
           return aceEditor.getSession().on("change", function(e) {
             var updateTimeout;
             updateTimeout = docUpdateTimeouts[docInfo.doc_id];

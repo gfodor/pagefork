@@ -26,8 +26,10 @@
 
     CssRenderer.prototype.update = function(doc_id, newCss) {
       var parser, ruleSetToString, self;
-      ruleSetToString = function(r, index) {
-        var rules, selector;
+      parser = new less.Parser();
+      self = this;
+      ruleSetToString = function(r, m) {
+        var css, indent, rules, selector;
         if (!(r.selectors && r.rules)) {
           return "";
         }
@@ -39,22 +41,39 @@
           });
           return ".phork-html " + (s.toCSS());
         }).join(",");
-        rules = _.map(r.rules, function(r) {
-          return "  " + (r.toCSS({})) + ";";
+        indent = m ? "    " : "  ";
+        rules = _.map(r.rules, function(innerRule) {
+          return "" + indent + (innerRule.toCSS({})) + ";";
         }).join("\n");
-        return selector + " {\n" + rules + "\n}\n";
+        css = selector + "  {\n" + rules + "\n}\n";
+        if (m) {
+          css = "@media " + (m.features.toCSS({})) + " {\n" + css + "\n}";
+        }
+        return css;
       };
-      parser = new less.Parser();
-      self = this;
       return parser.parse(newCss || "", function(err, tree) {
-        var entries, entriesToRemove, entry, existingHash, newEntries, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
+        var currentMedia, entries, entriesToRemove, entry, existingHash, newEntries, processLessNode, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
         if (err) {
           return;
         }
         seenCsses = {};
-        _.each(tree.rules, function(r) {
+        currentMedia = null;
+        processLessNode = function(n, index, m) {
           var candidateCurrentEntry, css, currentEntry, entries, hash, node, _i, _len;
-          css = ruleSetToString(r);
+          if (n.type === "Media") {
+            window.foo = n;
+            (function(media) {
+              return _.each(n.rules[0].rules, function(node) {
+                return processLessNode(node, 0, media);
+              });
+            })(n);
+            return;
+          } else if (n.type === "Directive") {
+            return;
+          } else if (n.type !== "Ruleset") {
+            return;
+          }
+          css = ruleSetToString(n, m);
           hash = self.stringHash(css);
           if (css === "") {
             return;
@@ -85,7 +104,7 @@
           }
           if (!currentEntry) {
             node = $("<style>").text(css);
-            $(".phork-styles").append(node);
+            $(self.el).append(node);
             if (entries) {
               if (!_.isArray(entries)) {
                 entries = self.domMap[hash] = [entries];
@@ -103,7 +122,10 @@
               };
             }
           }
-        });
+        };
+        _.each(tree.rules, (function(n, index) {
+          return processLessNode(n, index);
+        }));
         _ref = _.keys(self.domMap);
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {

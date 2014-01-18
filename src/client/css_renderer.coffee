@@ -16,7 +16,10 @@ window.CssRenderer = class CssRenderer
     hash
 
   update: (doc_id, newCss) ->
-    ruleSetToString = (r, index) ->
+    parser = new less.Parser()
+    self = this
+
+    ruleSetToString = (r, m) ->
       return "" unless r.selectors && r.rules
 
       selector = _.map(r.selectors, (s) ->
@@ -26,22 +29,37 @@ window.CssRenderer = class CssRenderer
         ".phork-html #{s.toCSS()}"
       ).join(",")
 
-      rules = _.map(r.rules, (r) ->
-        "  #{r.toCSS({})};"
+      indent = if m then "    " else "  "
+
+      rules = _.map(r.rules, (innerRule) ->
+        "#{indent}#{innerRule.toCSS({})};"
       ).join("\n")
 
-      selector + " {\n" + rules + "\n}\n"
+      css = selector + "  {\n" + rules + "\n}\n"
+      css = "@media #{m.features.toCSS({})} {\n#{css}\n}" if m
 
-    parser = new less.Parser()
-    self = this
+      css
 
     parser.parse newCss || "", (err, tree) ->
       return if err
 
       seenCsses = {}
+      currentMedia = null
 
-      _.each tree.rules, (r) ->
-        css = ruleSetToString(r)
+      processLessNode = (n, index, m) ->
+        if n.type == "Media"
+          window.foo = n
+          ((media) ->
+            _.each n.rules[0].rules, (node) ->
+              processLessNode(node, 0, media))(n)
+
+          return
+        else if n.type == "Directive"
+          return
+        else if n.type != "Ruleset"
+          return
+
+        css = ruleSetToString(n, m)
         hash = self.stringHash(css)
         return if css == ""
 
@@ -63,7 +81,7 @@ window.CssRenderer = class CssRenderer
 
         unless currentEntry
           node = $("<style>").text(css)
-          $(".phork-styles").append(node)
+          $(self.el).append(node)
 
           if entries
             unless _.isArray(entries)
@@ -72,6 +90,8 @@ window.CssRenderer = class CssRenderer
             entries.push { hash: hash, css: css, node: node }
           else
             self.domMap[hash] = { hash: hash, css: css, node: node }
+
+      _.each tree.rules, ((n, index) -> processLessNode(n, index))
 
       for existingHash in _.keys(self.domMap)
         entries = self.domMap[existingHash]

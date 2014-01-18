@@ -10,6 +10,12 @@ $ ->
   primaryAceEditor = null
   docUpdateTimeouts = {}
 
+  reflow = ->
+    # TODO add button to UI i guess?
+    content = primaryComponent.props.content
+    primaryComponent.setProps(content: "<div></div>")
+    primaryComponent.setProps(content: content)
+
   resetGuard = ->
     return if guardFrame && !guardFrame.isReady?
 
@@ -89,12 +95,15 @@ $ ->
 
         showWhenReady()
       else if docInfo.type == "css"
-        component = new CssRenderer()
+        styleContainer = $("<div>").attr("id", "styles-#{docInfo.doc_id}")[0]
+        $(".phork-styles").append(styleContainer)
 
-        setTimeout((->
+        component = new CssRenderer(styleContainer)
+
+        ((component, docInfo, doc) -> setTimeout((->
           component.update(docInfo.doc_id, doc.snapshot)
           readyDocs += 1
-        ), 0)
+        ), 0))(component, docInfo, doc)
 
         aceEditor.getSession().on "change", (e) ->
           updateTimeout = docUpdateTimeouts[docInfo.doc_id]

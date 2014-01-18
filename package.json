@@ -31,7 +31,7 @@
     "assert": "~1.1.0",
     "node-mhtml": "git://github.com/gfodor/node-mhtml.git#master",
     "cors": "~2.1.1",
-    "livedb-dynamodb": "~0.1.0",
+    "livedb-dynamodb": "~0.2.0",
     "jade": "~1.1.4",
     "stream": "0.0.1",
     "browserchannel": "~1.0.8",

@@ -31,7 +31,8 @@ app.use "/", express.static("assets")
 app.set 'view engine', 'jade'
 
 dynamodb = new AWS.DynamoDB()
-backend = livedb.client require("livedb-dynamodb")(dynamodb)
+s3 = new AWS.S3()
+backend = livedb.client require("livedb-dynamodb")(dynamodb, s3, { bucketName: "phork-data" })
 redis = require("redis").createClient(6379, "localhost")
 share = sharejs.server.createClient {backend, redis}
 
