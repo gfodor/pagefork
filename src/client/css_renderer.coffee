@@ -19,10 +19,10 @@ window.CssRenderer = class CssRenderer
     parser = new less.Parser()
     self = this
 
-    ruleSetToString = (r, m) ->
-      return "" unless r.selectors && r.rules
+    ruleSetToString = (ruleSet, m) ->
+      return "" unless ruleSet.selectors && ruleSet.rules
 
-      selector = _.map(r.selectors, (s) ->
+      selectorCss = _.map(ruleSet.selectors, (s) ->
         _.each s.elements, (element) ->
           element.value = ".phork-html-body" if element.value == "body"
 
@@ -31,14 +31,19 @@ window.CssRenderer = class CssRenderer
 
       indent = if m then "    " else "  "
 
-      rules = _.map(r.rules, (innerRule) ->
-        "#{indent}#{innerRule.toCSS({})};"
+      rulesCss = _.map(ruleSet.rules, (rule) ->
+        ruleCss = rule.toCSS({})
+
+        # Bug where things are not quoted
+        ruleCss = ruleCss.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')")
+        "#{indent}#{ruleCss};"
       ).join("\n")
 
-      css = selector + "  {\n" + rules + "\n}\n"
+      css = selectorCss + "  {\n" + rulesCss + "\n}\n"
       css = "@media #{m.features.toCSS({})} {\n#{css}\n}" if m
       css
 
+    console.log newCss
     parser.parse newCss || "", (err, tree) ->
       return if err
 
@@ -47,18 +52,21 @@ window.CssRenderer = class CssRenderer
 
       processLessNode = (n, index, m) ->
         if n.type == "Media"
-          window.foo = n
           ((media) ->
             _.each n.rules[0].rules, (node) ->
               processLessNode(node, 0, media))(n)
 
           return
         else if n.type == "Directive"
-          return
+          if n.name.toLowerCase() == "@font-face"
+            css = "@font-face \n#{ruleSetToString(n.rules[0])}\n"
+          else
+            return
         else if n.type != "Ruleset"
           return
+        else
+          css = ruleSetToString(n, m)
 
-        css = ruleSetToString(n, m)
         hash = self.stringHash(css)
         return if css == ""
 

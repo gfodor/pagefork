@@ -28,12 +28,12 @@
       var parser, ruleSetToString, self;
       parser = new less.Parser();
       self = this;
-      ruleSetToString = function(r, m) {
-        var css, indent, rules, selector;
-        if (!(r.selectors && r.rules)) {
+      ruleSetToString = function(ruleSet, m) {
+        var css, indent, rulesCss, selectorCss;
+        if (!(ruleSet.selectors && ruleSet.rules)) {
           return "";
         }
-        selector = _.map(r.selectors, function(s) {
+        selectorCss = _.map(ruleSet.selectors, function(s) {
           _.each(s.elements, function(element) {
             if (element.value === "body") {
               return element.value = ".phork-html-body";
@@ -42,15 +42,19 @@
           return ".phork-html " + (s.toCSS());
         }).join(",");
         indent = m ? "    " : "  ";
-        rules = _.map(r.rules, function(innerRule) {
-          return "" + indent + (innerRule.toCSS({})) + ";";
+        rulesCss = _.map(ruleSet.rules, function(rule) {
+          var ruleCss;
+          ruleCss = rule.toCSS({});
+          ruleCss = ruleCss.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')");
+          return "" + indent + ruleCss + ";";
         }).join("\n");
-        css = selector + "  {\n" + rules + "\n}\n";
+        css = selectorCss + "  {\n" + rulesCss + "\n}\n";
         if (m) {
           css = "@media " + (m.features.toCSS({})) + " {\n" + css + "\n}";
         }
         return css;
       };
+      console.log(newCss);
       return parser.parse(newCss || "", function(err, tree) {
         var currentMedia, entries, entriesToRemove, entry, existingHash, newEntries, processLessNode, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
         if (err) {
@@ -61,7 +65,6 @@
         processLessNode = function(n, index, m) {
           var candidateCurrentEntry, css, currentEntry, entries, hash, node, _i, _len;
           if (n.type === "Media") {
-            window.foo = n;
             (function(media) {
               return _.each(n.rules[0].rules, function(node) {
                 return processLessNode(node, 0, media);
@@ -69,11 +72,16 @@
             })(n);
             return;
           } else if (n.type === "Directive") {
-            return;
+            if (n.name.toLowerCase() === "@font-face") {
+              css = "@font-face \n" + (ruleSetToString(n.rules[0])) + "\n";
+            } else {
+              return;
+            }
           } else if (n.type !== "Ruleset") {
             return;
+          } else {
+            css = ruleSetToString(n, m);
           }
-          css = ruleSetToString(n, m);
           hash = self.stringHash(css);
           if (css === "") {
             return;
