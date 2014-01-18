@@ -85,6 +85,10 @@ class HtmlToRNodeParser
             "+1": "large"
             "+2": "x-large"
             "+3": "xx-large"
+            "+4": "-webkit-xxx-large"
+            "+5": "-webkit-xxx-large"
+            "+6": "-webkit-xxx-large"
+            "+7": "-webkit-xxx-large"
 
           if sizes[attribute.value]
             styles["font-size"] = sizes[attribute.value]

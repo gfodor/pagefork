@@ -53,7 +53,7 @@
         }).join("\n");
         css = selectorCss + "  {\n" + rulesCss + "\n}\n";
         if (m) {
-          css = "@media " + (m.features.toCSS({})) + " {\n" + css + "\n}";
+          css = "@media " + (m.features.toCSS({}).trim()) + " {\n" + css + "\n}";
         }
         return css;
       };
