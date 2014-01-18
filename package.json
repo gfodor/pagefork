@@ -36,7 +36,8 @@
     "stream": "0.0.1",
     "browserchannel": "~1.0.8",
     "redis": "~0.10.0",
-    "hiredis": "~0.1.16"
+    "hiredis": "~0.1.16",
+    "html": "0.0.7"
   },
   "engine": "node >= 0.10",
   "main": "lib/index.js",

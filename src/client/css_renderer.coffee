@@ -43,9 +43,11 @@ window.CssRenderer = class CssRenderer
       css = "@media #{m.features.toCSS({})} {\n#{css}\n}" if m
       css
 
-    console.log newCss
     parser.parse newCss || "", (err, tree) ->
-      return if err
+      if err
+        console.log newCss
+        console.log err
+        return
 
       seenCsses = {}
       currentMedia = null

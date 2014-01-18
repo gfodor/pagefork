@@ -3,6 +3,8 @@ async = require "async"
 cheerio = require "cheerio"
 htmltidy = require "htmltidy"
 cssbeautify = require "cssbeautify"
+hat = require "hat"
+htmlpretty = require "html"
 _ = require "lodash"
 
 module.exports = class MHTMLIngestor
@@ -19,13 +21,13 @@ module.exports = class MHTMLIngestor
         isPrimary = primaryContentPath == path
 
         processors[path] = ((path, isPrimary) ->
-          (cb) -> self.documentForPath(path, isPrimary, cb)
+          (cb) -> self.documentsForPath(path, isPrimary, cb)
         )(path, isPrimary)
 
       async.parallel processors, (err, results) ->
-        self.callback(err, _.compact(_.values(results)))
+        self.callback(err, _.compact(_.flatten(_.values(results))))
 
-  documentForPath: (path, isPrimary, callback) ->
+  documentsForPath: (path, isPrimary, callback) ->
     fs.readFile "#{path}.meta.json", (err, data) =>
       return callback(null) if err
 
@@ -38,24 +40,32 @@ module.exports = class MHTMLIngestor
         isNotHtml = meta["content-type"].toLowerCase() != "text/html"
 
       if isCss
-        this.cssDocumentForPath(path, callback)
+        this.documentsForCssPath(path, callback)
       else if !isNotHtml && isPrimary
-        this.htmlDocumentForPath(path, isPrimary, callback)
+        this.documentsForHtmlPath(path, isPrimary, callback)
       else
         callback(null)
 
-  cssDocumentForPath: (path, callback) ->
+  documentsForCssPath: (path, callback) ->
     documentName = _.last(path.split("/"))
 
-    fs.readFile path, 'utf8', (err, data) ->
-      css = cssbeautify data, { indent: '  ' }
-      css = css.replace(/@\s+/g, "@")
-      callback(null, { type: "css", name: documentName, content: css })
+    fs.readFile path, 'utf8', (err, data) =>
+      css = this.cssContentFromRawCss(data)
+      callback(null, [{ type: "css", name: documentName, content: css }])
     
-  htmlDocumentForPath: (path, isPrimary, callback) ->
+  cssContentFromRawCss: (css) ->
+    css = cssbeautify css, { indent: '  ' }
+    # Fix missing quotes
+    css = css.replace(/(\s*[-a-z]+:\s*)(['"])([^'";]+)(;|$)/gi, "$1$2$3$2$4")
+    # Remove !important
+    css = css.replace(/\s*!important\s*/i, "")
+    # Fix '@  page'
+    css.replace(/@\s+/g, "@")
+
+  documentsForHtmlPath: (path, isPrimary, callback) ->
     documentName = _.last(path.split("/"))
 
-    fs.readFile path, 'utf8', (err, data) ->
+    fs.readFile path, 'utf8', (err, data) =>
       $ = cheerio.load(data)
 
       # Remove CSS
@@ -64,25 +74,58 @@ module.exports = class MHTMLIngestor
       $("link[rel='StyleSheet']").remove()
       $("link[rel='STYLESHEET']").remove()
 
+      documents = []
+
+      # Generate documents for inline styles
+      _.each $("style"), (style) =>
+        documents.push
+          type: "css"
+          name: "#{hat(100, 36)}.css"
+          content: this.cssContentFromRawCss($(style).html())
+
+        $(style).remove()
+      
       title = $("title").text()
 
-      tidyOps =
-        hideComments: true
-        indent: true
-        
-      tidyOps["logical-emphasis"] = true
-      tidyOps["output-html"] = true
-      tidyOps["show-body-only"] = true
-      fullHtml = $("body").html()
+      bodyHtml = $("body").html() || ""
       $("body").empty()
       bodyTag = $("body").toString().replace("</body>", "")
       bodyClass = $("body").attr("class") || ""
 
-      htmltidy.tidy fullHtml || "", tidyOps, (err, html) ->
+      tidyOps =
+        hideComments: true
+        indent: true
+        wrap: 160
+        
+      tidyOps["logical-emphasis"] = true
+      tidyOps["output-html"] = true
+      tidyOps["show-body-only"] = true
+
+      prettyOps =
+        indent_size: 2
+        indent_char: " "
+        max_char: 160
+
+      finalize = (err, html) ->
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "  #{s}").join("\n")
         finalHtml = "#{bodyTag}\n#{indentedHtml}\n</body>"
 
-        callback(null, { type: "html", name: documentName, primary: isPrimary, content: finalHtml  })
+        documents.push
+          type: "html"
+          name: documentName
+          primary: isPrimary
+          content: finalHtml
+
+        callback(null, documents)
+
+      # Try regular pretty print and then tidy, hacky
+      # pretty fails on etsy.com
+      # tidy screws up cnn.com
+      try
+        finalize(null, htmlpretty.prettyPrint(bodyHtml, prettyOps))
+      catch e
+        htmltidy.tidy(bodyHtml, tidyOps, finalize)
+
 
   getFiles: (dir, cb) ->
     pending = [dir]

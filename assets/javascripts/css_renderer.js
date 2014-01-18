@@ -54,10 +54,11 @@
         }
         return css;
       };
-      console.log(newCss);
       return parser.parse(newCss || "", function(err, tree) {
         var currentMedia, entries, entriesToRemove, entry, existingHash, newEntries, processLessNode, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
         if (err) {
+          console.log(newCss);
+          console.log(err);
           return;
         }
         seenCsses = {};
