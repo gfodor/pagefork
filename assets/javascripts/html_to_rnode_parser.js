@@ -52,7 +52,7 @@
     };
 
     HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey) {
-      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, isFont, isTT, konstructor, rNodeAttributes, selector, styles, tag, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, isFont, isTT, konstructor, rNodeAttributes, selector, sizes, styles, tag, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
       tag = node.tagName.toLowerCase();
       if (tag === "script" || tag === "noscript" || tag === "head") {
         return null;
@@ -95,7 +95,27 @@
           } else if (attribute.name === "color") {
             styles["color"] = attribute.value;
           } else if (attribute.name === "size") {
-            styles["font-size"] = attribute.value;
+            sizes = {
+              "-3": "x-small",
+              "-2": "x-small",
+              "-1": "small",
+              "0": "x-small",
+              "1": "x-small",
+              "2": "small",
+              "3": "medium",
+              "4": "large",
+              "5": "x-large",
+              "6": "xx-large",
+              "+0": "medium",
+              "+1": "large",
+              "+2": "x-large",
+              "+3": "xx-large"
+            };
+            if (sizes[attribute.value]) {
+              styles["font-size"] = sizes[attribute.value];
+            } else {
+              styles["font-size"] = attribute.value;
+            }
           }
         }
         rNodeAttributes.style = styles;

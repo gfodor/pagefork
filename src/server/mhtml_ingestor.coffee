@@ -6,6 +6,8 @@ cssbeautify = require "cssbeautify"
 hat = require "hat"
 htmlpretty = require "html"
 _ = require "lodash"
+cssparse = require "css"
+gonzales = require "gonzales"
 
 module.exports = class MHTMLIngestor
   ingest: (sourceDir, primaryContentPath, cb) ->
@@ -54,13 +56,23 @@ module.exports = class MHTMLIngestor
       callback(null, [{ type: "css", name: documentName, content: css }])
     
   cssContentFromRawCss: (css) ->
+    # Try parsing it to clean it first
+    #try
+    #  cssp = gonzales.srcToCSSP(css)
+    #  css = gonzales.csspToSrc(cssp)
+    #catch e
+    #  try
+    #    css = cssparser.stringify(cssparser.parse(css))
+    #  catch f
+
     css = cssbeautify css, { indent: '  ' }
-    # Fix missing quotes
-    css = css.replace(/(\s*[-a-z]+:\s*)(['"])([^'";]+)(;|$)/gi, "$1$2$3$2$4")
+    # Fix missing quotes for font family
     # Remove !important
-    css = css.replace(/\s*!important\s*/i, "")
+    css = css.replace(/!important/gi, "")
+    css = css.replace(/!ie[0-9]?/gi, "")
+
     # Fix '@  page'
-    css.replace(/@\s+/g, "@")
+    css = css.replace(/@\s+/g, "@")
 
   documentsForHtmlPath: (path, isPrimary, callback) ->
     documentName = _.last(path.split("/"))
