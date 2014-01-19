@@ -39,13 +39,19 @@
       };
       styleRuleToString = function(styleRule) {
         var css, selector;
-        selector = styleRule.selectorText;
-        selector = selector.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2");
-        selector = selector.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2");
-        selector = _.map(selector.split(","), function(s) {
-          return ".phork-html " + s;
+        selector = _.map(styleRule.selectorText.split(","), function(s) {
+          var hasLeadingHtmlAsterisk;
+          hasLeadingHtmlAsterisk = s.trim().toLowerCase().indexOf("* html") === 0;
+          s = s.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2");
+          s = s.replace(/\s\s+/gi, " ");
+          s = s.replace(/\*\s+html(\s|!|\.|#|$)/gi, "$1");
+          s = s.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2");
+          if (hasLeadingHtmlAsterisk) {
+            return "* html .phork-html " + s;
+          } else {
+            return ".phork-html " + s;
+          }
         }).join(",");
-        selector = selector.replace(/\s\s+/gi, " ");
         css = "" + selector + " { " + styleRule.style.cssText + " }";
         if (styleRule.parentRule) {
           if (styleRule.parentRule.type === 4) {
