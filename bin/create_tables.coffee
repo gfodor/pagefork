@@ -128,7 +128,8 @@ purgeTable dynamodb, {
           TableName: "users",
           AttributeDefinitions: [
             { AttributeName: "user_id", AttributeType: "S" },
-            { AttributeName: "account_id", AttributeType: "S" }
+            { AttributeName: "account_id", AttributeType: "S" },
+            { AttributeName: "auth_token", AttributeType: "S" }
           ],
           KeySchema: [
             { AttributeName: "user_id", KeyType: "HASH" }
@@ -144,6 +145,15 @@ purgeTable dynamodb, {
                 ProjectionType: "ALL"
               ProvisionedThroughput: { ReadCapacityUnits: argv.r, WriteCapacityUnits: argv.w },
             },
+            {
+              IndexName: "user_id-auth_token_index",
+              KeySchema: [
+                { AttributeName: "auth_token", KeyType: "HASH" }
+              ],
+              Projection:
+                ProjectionType: "ALL"
+              ProvisionedThroughput: { ReadCapacityUnits: argv.r, WriteCapacityUnits: argv.w },
+            }
           ]
         }, (err) ->
           if err

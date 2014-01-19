@@ -110,15 +110,11 @@ module.exports = class MHTMLIngestor
         hideComments: true
         indent: true
         wrap: 160
+        bare: true
         
       tidyOps["logical-emphasis"] = true
       tidyOps["output-html"] = true
       tidyOps["show-body-only"] = true
-
-      prettyOps =
-        indent_size: 2
-        indent_char: " "
-        max_char: 160
 
       finalize = (err, html) ->
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "  #{s}").join("\n")
@@ -133,14 +129,8 @@ module.exports = class MHTMLIngestor
 
         callback(null, documents)
 
-      # Try regular pretty print and then tidy, hacky
-      # pretty fails on etsy.com
-      # tidy screws up cnn.com
-      try
-        finalize(null, htmlpretty.prettyPrint(bodyHtml, prettyOps))
-      catch e
-        htmltidy.tidy(bodyHtml, tidyOps, finalize)
-
+      # Screws up CNN.com's doubly nested ul's :P
+      htmltidy.tidy(bodyHtml, tidyOps, finalize)
 
   getFiles: (dir, cb) ->
     pending = [dir]
