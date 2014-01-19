@@ -25,13 +25,14 @@
     };
 
     CssRenderer.prototype.update = function(doc_id, styleSheet) {
-      var addCssQuotes, currentMedia, entries, entriesToRemove, entry, existingHash, i, newEntries, processNode, seenCsses, self, styleRuleToString, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results;
+      var currentMedia, entries, entriesToRemove, entry, existingHash, handleCssQuirks, i, newEntries, processNode, seenCsses, self, styleRuleToString, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results;
       window.s = styleSheet;
       self = this;
       seenCsses = {};
       currentMedia = null;
-      addCssQuotes = function(css) {
-        return css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')");
+      handleCssQuirks = function(css) {
+        css = css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')");
+        return css.replace("background-position: 0px 50%; background-repeat: initial initial", "background:0");
       };
       styleRuleToString = function(styleRule) {
         var css, selector;
@@ -48,7 +49,7 @@
             css = "@media " + styleRule.parentRule.media.mediaText + " { " + css + " }";
           }
         }
-        return addCssQuotes(css);
+        return handleCssQuirks(css);
       };
       processNode = function(n) {
         var candidateCurrentEntry, css, currentEntry, entries, hash, i, node, _i, _j, _len, _ref;
@@ -60,7 +61,7 @@
           }
           return;
         } else {
-          css = addCssQuotes(n.cssText);
+          css = handleCssQuirks(n.cssText);
         }
         hash = self.stringHash(css);
         if (css === "") {

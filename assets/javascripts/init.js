@@ -118,9 +118,9 @@
           aceEditor.setTheme("ace/theme/monokai");
           doc.attach_ace(aceEditor);
           if (docInfo.primary) {
-            initPrimaryDoc(docInfo, doc, aceEditor);
+            initPrimaryDoc(docInfo, this, aceEditor);
           } else if (docInfo.type === "css") {
-            initCssDoc(docInfo, doc, aceEditor);
+            initCssDoc(docInfo, this, aceEditor);
           }
           return true;
         });
@@ -129,7 +129,7 @@
     initPrimaryDoc = function(docInfo, doc, aceEditor) {
       var showWhenAllDocsReady;
       primaryComponent = new HtmlRenderer({
-        content: doc.snapshot
+        content: doc.snapshot || ""
       });
       components[docInfo.doc_id] = primaryComponent;
       primaryAceEditor = aceEditor;
@@ -160,10 +160,8 @@
       return showWhenAllDocsReady();
     };
     initCssDoc = function(docInfo, doc, aceEditor) {
-      var component, styleContainer, updateCssViaStyframe;
-      styleContainer = $("<div>").attr("id", "styles-" + docInfo.doc_id)[0];
-      $(".phork-styles").append(styleContainer);
-      component = new CssRenderer(styleContainer);
+      var component, updateCssViaStyframe;
+      component = new CssRenderer($("#styles-" + docInfo.doc_id)[0]);
       components[docInfo.doc_id] = component;
       updateCssViaStyframe = function(css, doc_id) {
         var styleSheet;
@@ -174,7 +172,7 @@
       };
       (function(component, docInfo, doc) {
         return setTimeout((function() {
-          updateCssViaStyframe(doc.snapshot, docInfo.doc_id);
+          updateCssViaStyframe(doc.snapshot || "", docInfo.doc_id);
           return readyDocs[docInfo.doc_id] = true;
         }), 0);
       })(component, docInfo, doc);
@@ -195,7 +193,7 @@
     return $.get("/phorks/" + phorkId + ".json", {
       dataType: "json"
     }, function(res) {
-      var docInfo, sjs, socket, _i, _len, _ref, _results;
+      var docInfo, sjs, socket, styleContainer, _i, _len, _ref, _results;
       socket = new BCSocket(null, {
         reconnect: true
       });
@@ -204,6 +202,10 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         docInfo = _ref[_i];
+        if (docInfo.type === "css") {
+          styleContainer = $("<div>").attr("id", "styles-" + docInfo.doc_id)[0];
+          $(".phork-styles").append(styleContainer);
+        }
         _results.push(initDoc(docInfo, sjs));
       }
       return _results;

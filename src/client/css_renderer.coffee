@@ -23,8 +23,11 @@ window.CssRenderer = class CssRenderer
     seenCsses = {}
     currentMedia = null
 
-    addCssQuotes = (css) ->
-      css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')")
+    handleCssQuirks = (css) ->
+      # Must enforce quotes around url/local references
+      css = css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')")
+      # Chrome MHTML export translates background:0 to this
+      css.replace("background-position: 0px 50%; background-repeat: initial initial", "background:0")
 
     styleRuleToString = (styleRule) ->
       selector = styleRule.selectorText
@@ -39,7 +42,7 @@ window.CssRenderer = class CssRenderer
         if styleRule.parentRule.type == 4
           css = "@media #{styleRule.parentRule.media.mediaText} { #{css} }"
 
-      addCssQuotes(css)
+      handleCssQuirks(css)
 
     processNode = (n) ->
       if n.type == 1
@@ -51,7 +54,7 @@ window.CssRenderer = class CssRenderer
 
         return
       else
-        css = addCssQuotes(n.cssText)
+        css = handleCssQuirks(n.cssText)
 
       hash = self.stringHash(css)
       return if css == ""

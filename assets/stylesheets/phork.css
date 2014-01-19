@@ -49,3 +49,7 @@ body {
   height: 1px;
   display: none;
 }
+
+.phork-html-body {
+  margin: 8px;
+}

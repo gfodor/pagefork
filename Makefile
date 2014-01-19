@@ -13,7 +13,6 @@ server-watch:
 
 client:
 	$(COFFEE) -c -o assets/javascripts src/client
-	cp src/client/*.js assets/javascripts
 
 client-watch:
 	$(COFFEE) -c -w -o assets/javascripts src/client

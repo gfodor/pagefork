@@ -104,14 +104,14 @@ $ ->
         doc.attach_ace(aceEditor)
 
         if docInfo.primary
-          initPrimaryDoc(docInfo, doc, aceEditor)
+          initPrimaryDoc(docInfo, this, aceEditor)
         else if docInfo.type == "css"
-          initCssDoc(docInfo, doc, aceEditor)
+          initCssDoc(docInfo, this, aceEditor)
 
         true
 
   initPrimaryDoc = (docInfo, doc, aceEditor) ->
-    primaryComponent = new HtmlRenderer(content: doc.snapshot)
+    primaryComponent = new HtmlRenderer(content: doc.snapshot || "")
     components[docInfo.doc_id] = primaryComponent
     primaryAceEditor = aceEditor
 
@@ -138,10 +138,7 @@ $ ->
     showWhenAllDocsReady()
 
   initCssDoc = (docInfo, doc, aceEditor) ->
-    styleContainer = $("<div>").attr("id", "styles-#{docInfo.doc_id}")[0]
-    $(".phork-styles").append(styleContainer)
-
-    component = new CssRenderer(styleContainer)
+    component = new CssRenderer($("#styles-#{docInfo.doc_id}")[0])
     components[docInfo.doc_id] = component
 
     updateCssViaStyframe = (css, doc_id) ->
@@ -152,7 +149,7 @@ $ ->
       component.update(doc_id, styleSheet)
 
     ((component, docInfo, doc) -> setTimeout((->
-      updateCssViaStyframe(doc.snapshot, docInfo.doc_id)
+      updateCssViaStyframe(doc.snapshot || "", docInfo.doc_id)
       readyDocs[docInfo.doc_id] = true
     ), 0))(component, docInfo, doc)
 
@@ -171,5 +168,10 @@ $ ->
     sjs = new window.sharejs.Connection(socket)
 
     for docInfo in res.docs
+      # Ensure CSS styles are in order by adding style tag here
+      if docInfo.type == "css"
+        styleContainer = $("<div>").attr("id", "styles-#{docInfo.doc_id}")[0]
+        $(".phork-styles").append(styleContainer)
+
       initDoc(docInfo, sjs)
 

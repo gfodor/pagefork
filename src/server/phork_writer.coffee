@@ -33,6 +33,7 @@ module.exports = class PhorkWriter
       name: { S: doc.name },
       type: { S: doc.type },
       created_at: { N: _.now().toString() },
+      index: { N: doc.index.toString() }
       primary: { N: if doc.primary then "1" else "0" }
 
     dyndb.putItem
