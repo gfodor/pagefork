@@ -123,14 +123,16 @@ module.exports = class MHTMLIngestor
       $("link[rel='STYLESHEET']").remove()
 
       documents = []
+      inlineIndex = 0
 
       # Generate documents for inline styles
       _.each $("style"), (style) =>
+        inlineIndex += 1
         documents.push
           type: "css"
           name: "#{hat(100, 36)}.css"
           content: this.cssContentFromRawCss($(style).html())
-          index: 100000 # Put the inline styles last
+          index: (100000 + inlineIndex) # Put the inline styles last
 
         $(style).remove()
       
