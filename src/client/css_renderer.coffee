@@ -18,7 +18,6 @@ window.CssRenderer = class CssRenderer
   update: (doc_id, styleSheet) ->
     window.s = styleSheet
 
-    parser = new less.Parser()
     self = this
 
     seenCsses = {}

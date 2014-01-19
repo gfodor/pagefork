@@ -147,7 +147,6 @@ $ ->
     updateCssViaStyframe = (css, doc_id) ->
       $("style", $(styFrames[doc_id].contentWindow.document)).html(css)
       styleSheet = styFrames[doc_id].contentWindow.document.styleSheets[0]
-      console.log styleSheet
 
       component = components[doc_id]
       component.update(doc_id, styleSheet)

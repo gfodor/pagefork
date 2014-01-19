@@ -25,9 +25,8 @@
     };
 
     CssRenderer.prototype.update = function(doc_id, styleSheet) {
-      var addCssQuotes, currentMedia, entries, entriesToRemove, entry, existingHash, i, newEntries, parser, processNode, seenCsses, self, styleRuleToString, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results;
+      var addCssQuotes, currentMedia, entries, entriesToRemove, entry, existingHash, i, newEntries, processNode, seenCsses, self, styleRuleToString, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results;
       window.s = styleSheet;
-      parser = new less.Parser();
       self = this;
       seenCsses = {};
       currentMedia = null;
