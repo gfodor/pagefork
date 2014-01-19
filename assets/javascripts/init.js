@@ -188,7 +188,7 @@
           return function() {
             return updateCssViaStyframe(aceEditor.getValue(), docInfo.doc_id);
           };
-        })(component, docInfo, doc), 250);
+        })(component, docInfo, doc), 100);
         return true;
       });
     };
