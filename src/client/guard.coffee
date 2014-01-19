@@ -1,5 +1,4 @@
 $ ->
-  phorkId = $('body').data('phorkId')
   target = $("#doc-container .phork-html")[0]
   component = new HtmlRenderer(content: "<div></div>")
   React.renderComponent component, target

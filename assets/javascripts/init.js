@@ -2,14 +2,17 @@
 (function() {
 
   $(function() {
-    var docReflowTimeouts, docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, reflow, resetGuard, totalDocs, updateDOMAfterGuard;
+    var afterHelperFramesReady, components, docReflowTimeouts, docUpdateTimeouts, guardCount, guardFrame, htmlVersion, initCssDoc, initDoc, initPrimaryDoc, phorkId, primaryAceEditor, primaryComponent, readyDocs, readyStyFrames, reflow, resetGuard, styFrames, totalDocs, updateDOMAfterGuard;
     phorkId = $('body').data('phorkId');
-    readyDocs = 0;
+    readyDocs = {};
     totalDocs = 0;
     htmlVersion = 0;
     guardCount = 0;
     guardFrame = null;
+    styFrames = {};
+    readyStyFrames = {};
     primaryComponent = null;
+    components = {};
     primaryAceEditor = null;
     docUpdateTimeouts = {};
     docReflowTimeouts = {};
@@ -71,74 +74,123 @@
         }
       }
     });
+    afterHelperFramesReady = function(docInfo, cb) {
+      var styframe, waitForStyFrame;
+      if (docInfo.type === "css") {
+        styframe = $("<iframe>");
+        styframe.attr({
+          src: "/styframe",
+          "class": "phork-styframe",
+          id: "phork-styframe-" + docInfo.doc_id
+        });
+        styframe.ready(function() {
+          return readyStyFrames[docInfo.doc_id] = true;
+        });
+        styFrames[docInfo.doc_id] = styframe[0];
+        $("body").append(styframe);
+        waitForStyFrame = function() {
+          if (readyStyFrames[docInfo.doc_id]) {
+            return cb();
+          } else {
+            return setTimeout(waitForStyFrame, 100);
+          }
+        };
+        return waitForStyFrame();
+      } else {
+        return cb();
+      }
+    };
     initDoc = function(docInfo, sjs) {
-      var doc;
       totalDocs += 1;
-      doc = sjs.get('docs', docInfo.doc_id);
-      doc.subscribe();
-      return doc.whenReady(function() {
-        var aceEditor, codeDiv, component, editor, showWhenReady, styleContainer;
-        codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
-        editor = $("<div>");
-        codeDiv.append(editor);
-        $("#phork-ui .tabs").append(codeDiv);
-        aceEditor = ace.edit("code-" + docInfo.doc_id);
-        $("#code-" + docInfo.doc_id).addClass("code-editor");
-        aceEditor.getSession().setMode("ace/mode/" + docInfo.type);
-        aceEditor.setTheme("ace/theme/monokai");
-        doc.attach_ace(aceEditor);
-        if (docInfo.primary) {
-          primaryComponent = new HtmlRenderer({
-            content: doc.snapshot
-          });
-          primaryAceEditor = aceEditor;
-          aceEditor.getSession().on("change", function(e) {
-            var reflowTimeout, updateTimeout;
-            updateTimeout = docUpdateTimeouts[docInfo.doc_id];
-            if (updateTimeout) {
-              clearTimeout(updateTimeout);
-            }
-            docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250);
-            reflowTimeout = docReflowTimeouts[docInfo.doc_id];
-            if (reflowTimeout) {
-              clearTimeout(reflowTimeout);
-            }
-            docReflowTimeouts[docInfo.doc_id] = setTimeout(reflow, 2500);
-            return true;
-          });
-          readyDocs += 1;
-          showWhenReady = function() {
-            if (readyDocs >= totalDocs) {
-              return setTimeout((function() {
-                return React.renderComponent(primaryComponent, $("#doc-container .phork-html")[0]);
-              }), 0);
-            } else {
-              return setTimeout(showWhenReady, 500);
-            }
-          };
-          return showWhenReady();
-        } else if (docInfo.type === "css") {
-          styleContainer = $("<div>").attr("id", "styles-" + docInfo.doc_id)[0];
-          $(".phork-styles").append(styleContainer);
-          component = new CssRenderer(styleContainer);
-          (function(component, docInfo, doc) {
-            return setTimeout((function() {
-              component.update(docInfo.doc_id, doc.snapshot);
-              return readyDocs += 1;
-            }), 0);
-          })(component, docInfo, doc);
-          return aceEditor.getSession().on("change", function(e) {
-            var updateTimeout;
-            updateTimeout = docUpdateTimeouts[docInfo.doc_id];
-            if (updateTimeout) {
-              clearTimeout(updateTimeout);
-            }
-            docUpdateTimeouts[docInfo.doc_id] = setTimeout((function() {
-              return component.update(docInfo.doc_id, doc.snapshot);
-            }), 250);
-            return true;
-          });
+      return afterHelperFramesReady(docInfo, function() {
+        var doc;
+        doc = sjs.get('docs', docInfo.doc_id);
+        doc.subscribe();
+        return doc.whenReady(function() {
+          var aceEditor, codeDiv, editor;
+          codeDiv = $("<div>").prop("id", "code-" + docInfo.doc_id);
+          editor = $("<div>");
+          codeDiv.append(editor);
+          $("#phork-ui .tabs").append(codeDiv);
+          aceEditor = ace.edit("code-" + docInfo.doc_id);
+          $("#code-" + docInfo.doc_id).addClass("code-editor");
+          aceEditor.getSession().setMode("ace/mode/" + docInfo.type);
+          aceEditor.setTheme("ace/theme/monokai");
+          doc.attach_ace(aceEditor);
+          if (docInfo.primary) {
+            initPrimaryDoc(docInfo, doc, aceEditor);
+          } else if (docInfo.type === "css") {
+            initCssDoc(docInfo, doc, aceEditor);
+          }
+          return true;
+        });
+      });
+    };
+    initPrimaryDoc = function(docInfo, doc, aceEditor) {
+      var showWhenAllDocsReady;
+      primaryComponent = new HtmlRenderer({
+        content: doc.snapshot
+      });
+      components[docInfo.doc_id] = primaryComponent;
+      primaryAceEditor = aceEditor;
+      aceEditor.getSession().on("change", function(e) {
+        var reflowTimeout, updateTimeout;
+        updateTimeout = docUpdateTimeouts[docInfo.doc_id];
+        if (updateTimeout) {
+          clearTimeout(updateTimeout);
         }
+        docUpdateTimeouts[docInfo.doc_id] = setTimeout(updateDOMAfterGuard, 250);
+        reflowTimeout = docReflowTimeouts[docInfo.doc_id];
+        if (reflowTimeout) {
+          clearTimeout(reflowTimeout);
+        }
+        docReflowTimeouts[docInfo.doc_id] = setTimeout(reflow, 2500);
+        return true;
+      });
+      readyDocs[docInfo.doc_id] = true;
+      showWhenAllDocsReady = function() {
+        if (_.keys(readyDocs).length >= totalDocs) {
+          return setTimeout((function() {
+            return React.renderComponent(primaryComponent, $("#doc-container .phork-html")[0]);
+          }), 0);
+        } else {
+          return setTimeout(showWhenAllDocsReady, 100);
+        }
+      };
+      return showWhenAllDocsReady();
+    };
+    initCssDoc = function(docInfo, doc, aceEditor) {
+      var component, styleContainer, updateCssViaStyframe;
+      styleContainer = $("<div>").attr("id", "styles-" + docInfo.doc_id)[0];
+      $(".phork-styles").append(styleContainer);
+      component = new CssRenderer(styleContainer);
+      components[docInfo.doc_id] = component;
+      updateCssViaStyframe = function(css, doc_id) {
+        var styleSheet;
+        $("style", $(styFrames[doc_id].contentWindow.document)).html(css);
+        styleSheet = styFrames[doc_id].contentWindow.document.styleSheets[0];
+        console.log(styleSheet);
+        component = components[doc_id];
+        return component.update(doc_id, styleSheet);
+      };
+      (function(component, docInfo, doc) {
+        return setTimeout((function() {
+          updateCssViaStyframe(doc.snapshot, docInfo.doc_id);
+          return readyDocs[docInfo.doc_id] = true;
+        }), 0);
+      })(component, docInfo, doc);
+      return aceEditor.getSession().on("change", function(e) {
+        var updateTimeout;
+        updateTimeout = docUpdateTimeouts[docInfo.doc_id];
+        if (updateTimeout) {
+          clearTimeout(updateTimeout);
+        }
+        docUpdateTimeouts[docInfo.doc_id] = setTimeout((function(component, docInfo, doc) {
+          return function() {
+            return updateCssViaStyframe(aceEditor.getValue(), docInfo.doc_id);
+          };
+        })(component, docInfo, doc), 250);
+        return true;
       });
     };
     return $.get("/phorks/" + phorkId + ".json", {

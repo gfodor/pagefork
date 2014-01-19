@@ -103,6 +103,9 @@ app.get "/phorks/:phork_id.json", (req, res) ->
 app.get "/guard", (req, res) ->
   res.render 'guard'
 
+app.get "/styframe", (req, res) ->
+  res.render 'styframe'
+
 app.get "/phorks/:phork_id", (req, res) ->
   res.render 'phork', { phork_id: req.params.phork_id }
 

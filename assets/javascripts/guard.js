@@ -2,8 +2,7 @@
 (function() {
 
   $(function() {
-    var component, phorkId, target;
-    phorkId = $('body').data('phorkId');
+    var component, target;
     target = $("#doc-container .phork-html")[0];
     component = new HtmlRenderer({
       content: "<div></div>"

@@ -24,164 +24,142 @@
       return hash;
     };
 
-    CssRenderer.prototype.update = function(doc_id, newCss) {
-      var parser, ruleSetToString, self;
+    CssRenderer.prototype.update = function(doc_id, styleSheet) {
+      var addCssQuotes, currentMedia, entries, entriesToRemove, entry, existingHash, i, newEntries, parser, processNode, seenCsses, self, styleRuleToString, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _results;
+      window.s = styleSheet;
       parser = new less.Parser();
       self = this;
-      ruleSetToString = function(ruleSet, m) {
-        var css, indent, rulesCss, selectorCss;
-        if (!(ruleSet.selectors && ruleSet.rules)) {
-          return "";
-        }
-        selectorCss = _.map(ruleSet.selectors, function(s) {
-          _.each(s.elements, function(element) {
-            if (element.value === "body") {
-              element.value = ".phork-html-body";
-            }
-            if (element.value === "html") {
-              return element.value = "";
-            }
-          });
-          return ".phork-html " + (s.toCSS());
-        }).join(",");
-        indent = m ? "    " : "  ";
-        rulesCss = _.map(ruleSet.rules, function(rule) {
-          var ruleCss;
-          ruleCss = rule.toCSS({});
-          ruleCss = ruleCss.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')");
-          return "" + indent + ruleCss + ";";
-        }).join("\n");
-        css = selectorCss + "  {\n" + rulesCss + "\n}\n";
-        if (m) {
-          css = "@media " + (m.features.toCSS({}).trim()) + " {\n" + css + "\n}";
-        }
-        return css;
+      seenCsses = {};
+      currentMedia = null;
+      addCssQuotes = function(css) {
+        return css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')");
       };
-      return parser.parse(newCss || "", function(err, tree) {
-        var currentMedia, entries, entriesToRemove, entry, existingHash, newEntries, processLessNode, seenCsses, _i, _j, _k, _len, _len1, _len2, _ref, _results;
-        if (err) {
+      styleRuleToString = function(styleRule) {
+        var css, selector;
+        selector = styleRule.selectorText;
+        selector = selector.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2");
+        selector = selector.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2");
+        selector = _.map(selector.split(","), function(s) {
+          return ".phork-html " + s;
+        }).join(",");
+        selector = selector.replace(/\s\s+/gi, " ");
+        css = "" + selector + " { " + styleRule.style.cssText + " }";
+        if (styleRule.parentRule) {
+          if (styleRule.parentRule.type === 4) {
+            css = "@media " + styleRule.parentRule.media.mediaText + " { " + css + " }";
+          }
+        }
+        return addCssQuotes(css);
+      };
+      processNode = function(n) {
+        var candidateCurrentEntry, css, currentEntry, entries, hash, i, node, _i, _j, _len, _ref;
+        if (n.type === 1) {
+          css = styleRuleToString(n);
+        } else if (n.type === 4) {
+          for (i = _i = 0, _ref = n.cssRules.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+            processNode(n.cssRules[i]);
+          }
+          return;
+        } else {
+          css = addCssQuotes(n.cssText);
+        }
+        hash = self.stringHash(css);
+        if (css === "") {
           return;
         }
-        seenCsses = {};
-        currentMedia = null;
-        processLessNode = function(n, index, m) {
-          var candidateCurrentEntry, css, currentEntry, entries, hash, node, _i, _len;
-          if (n.type === "Media") {
-            (function(media) {
-              return _.each(n.rules[0].rules, function(node) {
-                return processLessNode(node, 0, media);
-              });
-            })(n);
-            return;
-          } else if (n.type === "Directive") {
-            if (n.name.toLowerCase() === "@font-face") {
-              css = "@font-face \n" + (ruleSetToString(n.rules[0])) + "\n";
-            } else {
-              return;
-            }
-          } else if (n.type !== "Ruleset") {
-            return;
-          } else {
-            css = ruleSetToString(n, m);
+        if (seenCsses[hash]) {
+          if (!_.isArray(seenCsses[hash])) {
+            seenCsses[hash] = [seenCsses[hash]];
           }
-          hash = self.stringHash(css);
-          if (css === "") {
-            return;
-          }
-          if (seenCsses[hash]) {
-            if (!_.isArray(seenCsses[hash])) {
-              seenCsses[hash] = [seenCsses[hash]];
-            }
-            seenCsses[hash].push(css);
-          } else {
-            seenCsses[hash] = css;
-          }
-          currentEntry = null;
-          entries = self.domMap[hash];
-          if (entries) {
-            if (_.isArray(entries)) {
-              for (_i = 0, _len = entries.length; _i < _len; _i++) {
-                candidateCurrentEntry = entries[_i];
-                if (candidateCurrentEntry.css === css) {
-                  currentEntry = candidateCurrentEntry;
-                }
-              }
-            } else {
-              if (entries.css === css) {
-                currentEntry = entries;
-              }
-            }
-          }
-          if (!currentEntry) {
-            node = $("<style>").text(css);
-            $(self.el).append(node);
-            if (entries) {
-              if (!_.isArray(entries)) {
-                entries = self.domMap[hash] = [entries];
-              }
-              return entries.push({
-                hash: hash,
-                css: css,
-                node: node
-              });
-            } else {
-              return self.domMap[hash] = {
-                hash: hash,
-                css: css,
-                node: node
-              };
-            }
-          }
-        };
-        _.each(tree.rules, (function(n, index) {
-          return processLessNode(n, index);
-        }));
-        _ref = _.keys(self.domMap);
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          existingHash = _ref[_i];
-          entries = self.domMap[existingHash];
+          seenCsses[hash].push(css);
+        } else {
+          seenCsses[hash] = css;
+        }
+        currentEntry = null;
+        entries = self.domMap[hash];
+        if (entries) {
           if (_.isArray(entries)) {
-            entriesToRemove = [];
-            for (_j = 0, _len1 = entries.length; _j < _len1; _j++) {
-              entry = entries[_j];
-              if (seenCsses[entry.hash]) {
-                if ((_.isArray(seenCsses[entry.hash]) && !_.include(seenCsses[entry.hash], entry.css)) || (!_.isArray(seenCsses[entry.hash]) && seenCsses[entry.hash] !== entry.css)) {
-                  entriesToRemove.push(entry);
-                }
-              } else {
-                entriesToRemove.push(entry);
+            for (_j = 0, _len = entries.length; _j < _len; _j++) {
+              candidateCurrentEntry = entries[_j];
+              if (candidateCurrentEntry.css === css) {
+                currentEntry = candidateCurrentEntry;
               }
-            }
-            if (entriesToRemove.length > 0) {
-              for (_k = 0, _len2 = entriesToRemove.length; _k < _len2; _k++) {
-                entry = entriesToRemove[_k];
-                $(entry.node).remove();
-              }
-              newEntries = _.reject(entries, function(e) {
-                return _.select(entriesToRemove, function(ee) {
-                  return ee.css === e.css;
-                }).length > 0;
-              });
-              if (newEntries.length === 0) {
-                _results.push(delete self.domMap[existingHash]);
-              } else {
-                _results.push(self.domMap[existingHash] = newEntries);
-              }
-            } else {
-              _results.push(void 0);
             }
           } else {
-            if (!seenCsses[entries.hash] || (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) || (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] !== entries.css)) {
-              $(entries.node).remove();
-              _results.push(delete self.domMap[existingHash]);
-            } else {
-              _results.push(void 0);
+            if (entries.css === css) {
+              currentEntry = entries;
             }
           }
         }
-        return _results;
-      });
+        if (!currentEntry) {
+          node = $("<style>").text(css);
+          $(self.el).append(node);
+          if (entries) {
+            if (!_.isArray(entries)) {
+              entries = self.domMap[hash] = [entries];
+            }
+            return entries.push({
+              hash: hash,
+              css: css,
+              node: node
+            });
+          } else {
+            return self.domMap[hash] = {
+              hash: hash,
+              css: css,
+              node: node
+            };
+          }
+        }
+      };
+      for (i = _i = 0, _ref = styleSheet.rules.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        processNode(styleSheet.rules[i]);
+      }
+      _ref1 = _.keys(self.domMap);
+      _results = [];
+      for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+        existingHash = _ref1[_j];
+        entries = self.domMap[existingHash];
+        if (_.isArray(entries)) {
+          entriesToRemove = [];
+          for (_k = 0, _len1 = entries.length; _k < _len1; _k++) {
+            entry = entries[_k];
+            if (seenCsses[entry.hash]) {
+              if ((_.isArray(seenCsses[entry.hash]) && !_.include(seenCsses[entry.hash], entry.css)) || (!_.isArray(seenCsses[entry.hash]) && seenCsses[entry.hash] !== entry.css)) {
+                entriesToRemove.push(entry);
+              }
+            } else {
+              entriesToRemove.push(entry);
+            }
+          }
+          if (entriesToRemove.length > 0) {
+            for (_l = 0, _len2 = entriesToRemove.length; _l < _len2; _l++) {
+              entry = entriesToRemove[_l];
+              $(entry.node).remove();
+            }
+            newEntries = _.reject(entries, function(e) {
+              return _.select(entriesToRemove, function(ee) {
+                return ee.css === e.css;
+              }).length > 0;
+            });
+            if (newEntries.length === 0) {
+              _results.push(delete self.domMap[existingHash]);
+            } else {
+              _results.push(self.domMap[existingHash] = newEntries);
+            }
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          if (!seenCsses[entries.hash] || (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) || (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] !== entries.css)) {
+            $(entries.node).remove();
+            _results.push(delete self.domMap[existingHash]);
+          } else {
+            _results.push(void 0);
+          }
+        }
+      }
+      return _results;
     };
 
     return CssRenderer;

@@ -15,123 +15,109 @@ window.CssRenderer = class CssRenderer
 
     hash
 
-  update: (doc_id, newCss) ->
+  update: (doc_id, styleSheet) ->
+    window.s = styleSheet
+
     parser = new less.Parser()
     self = this
 
-    ruleSetToString = (ruleSet, m) ->
-      return "" unless ruleSet.selectors && ruleSet.rules
+    seenCsses = {}
+    currentMedia = null
 
-      selectorCss = _.map(ruleSet.selectors, (s) ->
-        _.each s.elements, (element) ->
-          element.value = ".phork-html-body" if element.value == "body"
-          element.value = "" if element.value == "html"
+    addCssQuotes = (css) ->
+      css.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')")
 
-        ".phork-html #{s.toCSS()}"
-      ).join(",")
+    styleRuleToString = (styleRule) ->
+      selector = styleRule.selectorText
+      selector = selector.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2")
+      selector = selector.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2")
+      selector = _.map(selector.split(","), (s) -> ".phork-html #{s}").join(",")
+      selector = selector.replace(/\s\s+/gi, " ")
 
-      indent = if m then "    " else "  "
+      css = "#{selector} { #{styleRule.style.cssText} }"
 
-      rulesCss = _.map(ruleSet.rules, (rule) ->
-        ruleCss = rule.toCSS({})
+      if styleRule.parentRule
+        if styleRule.parentRule.type == 4
+          css = "@media #{styleRule.parentRule.media.mediaText} { #{css} }"
 
-        # Bug where things are not quoted
-        ruleCss = ruleCss.replace(/(local|url)\(([^'"][^)]+)\)/ig, "$1('$2')")
-        "#{indent}#{ruleCss};"
-      ).join("\n")
+      addCssQuotes(css)
 
-      css = selectorCss + "  {\n" + rulesCss + "\n}\n"
-      css = "@media #{m.features.toCSS({}).trim()} {\n#{css}\n}" if m
-      css
+    processNode = (n) ->
+      if n.type == 1
+        css = styleRuleToString(n)
+      else if n.type == 4
+        # note must use loop here, it's a object not an array!
+        for i in [0...(n.cssRules.length)]
+          processNode(n.cssRules[i])
 
-    parser.parse newCss || "", (err, tree) ->
-      if err
-        #console.log newCss
-        #console.log err
         return
+      else
+        css = addCssQuotes(n.cssText)
 
-      seenCsses = {}
-      currentMedia = null
+      hash = self.stringHash(css)
+      return if css == ""
 
-      processLessNode = (n, index, m) ->
-        if n.type == "Media"
-          ((media) ->
-            _.each n.rules[0].rules, (node) ->
-              processLessNode(node, 0, media))(n)
+      if seenCsses[hash]
+        seenCsses[hash] = [seenCsses[hash]] unless _.isArray(seenCsses[hash])
+        seenCsses[hash].push(css)
+      else
+        seenCsses[hash] = css
 
-          return
-        else if n.type == "Directive"
-          if n.name.toLowerCase() == "@font-face"
-            css = "@font-face \n#{ruleSetToString(n.rules[0])}\n"
-          else
-            return
-        else if n.type != "Ruleset"
-          return
+      currentEntry = null
+      entries = self.domMap[hash]
+
+      if entries
+        if _.isArray(entries)
+          for candidateCurrentEntry in entries
+            currentEntry = candidateCurrentEntry if candidateCurrentEntry.css == css
         else
-          css = ruleSetToString(n, m)
+          currentEntry = entries if entries.css == css
 
-        hash = self.stringHash(css)
-        return if css == ""
-
-        if seenCsses[hash]
-          seenCsses[hash] = [seenCsses[hash]] unless _.isArray(seenCsses[hash])
-          seenCsses[hash].push(css)
-        else
-          seenCsses[hash] = css
-
-        currentEntry = null
-        entries = self.domMap[hash]
+      unless currentEntry
+        node = $("<style>").text(css)
+        $(self.el).append(node)
 
         if entries
-          if _.isArray(entries)
-            for candidateCurrentEntry in entries
-              currentEntry = candidateCurrentEntry if candidateCurrentEntry.css == css
-          else
-            currentEntry = entries if entries.css == css
+          unless _.isArray(entries)
+            entries = self.domMap[hash] = [entries]
 
-        unless currentEntry
-          node = $("<style>").text(css)
-          $(self.el).append(node)
-
-          if entries
-            unless _.isArray(entries)
-              entries = self.domMap[hash] = [entries]
-
-            entries.push { hash: hash, css: css, node: node }
-          else
-            self.domMap[hash] = { hash: hash, css: css, node: node }
-
-      _.each tree.rules, ((n, index) -> processLessNode(n, index))
-
-      for existingHash in _.keys(self.domMap)
-        entries = self.domMap[existingHash]
-
-        if _.isArray(entries)
-          entriesToRemove = []
-
-          for entry in entries
-            if seenCsses[entry.hash]
-              if (_.isArray(seenCsses[entry.hash]) && !_.include(seenCsses[entry.hash], entry.css)) ||
-                 (!_.isArray(seenCsses[entry.hash]) && seenCsses[entry.hash] != entry.css)
-                entriesToRemove.push(entry)
-            else
-              entriesToRemove.push(entry)
-
-          if entriesToRemove.length > 0
-            for entry in entriesToRemove
-              $(entry.node).remove()
-
-            newEntries = _.reject(entries, (e) -> _.select(entriesToRemove, (ee) -> ee.css == e.css).length > 0)
-
-            if newEntries.length == 0
-              delete self.domMap[existingHash]
-            else
-              self.domMap[existingHash] = newEntries
+          entries.push { hash: hash, css: css, node: node }
         else
-          if !seenCsses[entries.hash] ||
-             (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) ||
-             (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] != entries.css)
+          self.domMap[hash] = { hash: hash, css: css, node: node }
 
-            $(entries.node).remove()
+    # note must use loop here, it's a object not an array!
+    for i in [0...styleSheet.rules.length]
+      processNode(styleSheet.rules[i])
+
+    for existingHash in _.keys(self.domMap)
+      entries = self.domMap[existingHash]
+
+      if _.isArray(entries)
+        entriesToRemove = []
+
+        for entry in entries
+          if seenCsses[entry.hash]
+            if (_.isArray(seenCsses[entry.hash]) && !_.include(seenCsses[entry.hash], entry.css)) ||
+                (!_.isArray(seenCsses[entry.hash]) && seenCsses[entry.hash] != entry.css)
+              entriesToRemove.push(entry)
+          else
+            entriesToRemove.push(entry)
+
+        if entriesToRemove.length > 0
+          for entry in entriesToRemove
+            $(entry.node).remove()
+
+          newEntries = _.reject(entries, (e) -> _.select(entriesToRemove, (ee) -> ee.css == e.css).length > 0)
+
+          if newEntries.length == 0
             delete self.domMap[existingHash]
+          else
+            self.domMap[existingHash] = newEntries
+      else
+        if !seenCsses[entries.hash] ||
+            (_.isArray(seenCsses[entries.hash]) && !_.include(seenCsses[entries.hash], entries.css)) ||
+            (!_.isArray(seenCsses[entries.hash]) && seenCsses[entries.hash] != entries.css)
+
+          $(entries.node).remove()
+          delete self.domMap[existingHash]
 
