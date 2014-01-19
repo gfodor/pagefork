@@ -161,7 +161,9 @@
     };
     initCssDoc = function(docInfo, doc, aceEditor) {
       var component, updateCssViaStyframe;
-      component = new CssRenderer($("#styles-" + docInfo.doc_id)[0]);
+      component = new CssRenderer($("#styles-" + docInfo.doc_id)[0], {
+        media: docInfo.media
+      });
       components[docInfo.doc_id] = component;
       updateCssViaStyframe = function(css, doc_id) {
         var styleSheet;

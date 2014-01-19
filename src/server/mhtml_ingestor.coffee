@@ -14,22 +14,40 @@ module.exports = class MHTMLIngestor
     self = this
     self.callback = cb
 
-    this.getFiles sourceDir, (err, files) ->
-      return self.callback(err) if err
+    this.withCssMetadata primaryContentPath, (err, cssMetadata) =>
+      this.getFiles sourceDir, (err, files) ->
+        return self.callback(err) if err
 
-      processors = {}
+        processors = {}
 
-      for path in files
-        isPrimary = primaryContentPath == path
+        for path in files
+          isPrimary = primaryContentPath == path
 
-        processors[path] = ((path, isPrimary) ->
-          (cb) -> self.documentsForPath(path, isPrimary, cb)
-        )(path, isPrimary)
+          processors[path] = ((path, isPrimary) ->
+            (cb) -> self.documentsForPath(path, isPrimary, cssMetadata, cb)
+          )(path, isPrimary)
 
-      async.parallel processors, (err, results) ->
-        self.callback(err, _.compact(_.flatten(_.values(results))))
+        async.parallel processors, (err, results) ->
+          self.callback(err, _.compact(_.flatten(_.values(results))))
 
-  documentsForPath: (path, isPrimary, callback) ->
+  withCssMetadata: (primaryContentPath, callback) ->
+    fs.readFile primaryContentPath, 'utf8', (err, data) =>
+      $ = cheerio.load(data)
+
+      cssMeta = {}
+
+      # Remove CSS
+      for link in $("link")
+        if ($(link).attr("rel") || "").toLowerCase() == "stylesheet"
+          href = $(link).attr("href")
+          media = $(link).attr("media")
+
+          if href && media
+            cssMeta[href] = { media: media }
+
+      callback(null, cssMeta)
+
+  documentsForPath: (path, isPrimary, cssMetadata, callback) ->
     fs.readFile "#{path}.meta.json", (err, data) =>
       return callback(null) if err
 
@@ -46,18 +64,36 @@ module.exports = class MHTMLIngestor
           fileIndex = meta["mhtml-file-offset"]
 
       if isCss
-        this.documentsForCssPath(path, fileIndex, callback)
+        this.documentsForCssPath(path, fileIndex, cssMetadata, callback)
       else if !isNotHtml && isPrimary
         this.documentsForHtmlPath(path, isPrimary, fileIndex, callback)
       else
         callback(null)
 
-  documentsForCssPath: (path, fileIndex, callback) ->
-    documentName = _.last(path.split("/"))
+  documentsForCssPath: (path, fileIndex, cssMetadata, callback) ->
+    fs.readFile "#{path}.meta.json", (err, data) =>
+      return callback(null) if err
 
-    fs.readFile path, 'utf8', (err, data) =>
-      css = this.cssContentFromRawCss(data)
-      callback(null, [{ type: "css", index: fileIndex, name: documentName, content: css }])
+      docMeta = JSON.parse(data)
+      documentName = _.last(path.split("/"))
+
+      fs.readFile path, 'utf8', (err, data) =>
+        css = this.cssContentFromRawCss(data)
+        docLocation = docMeta["content-location"].toLowerCase()
+
+        for path, cssMetaCandidate of cssMetadata
+          if docLocation.indexOf(path.toLowerCase()) == 0
+            cssMeta = cssMetaCandidate
+
+        doc =
+          type: "css"
+          index: fileIndex
+          name: documentName
+          content: css
+
+        doc.media = cssMeta.media if cssMeta && cssMeta.media
+
+        callback(null, [doc])
     
   cssContentFromRawCss: (css) ->
     css = _.map(css.split("\n"), (l) ->
@@ -94,7 +130,7 @@ module.exports = class MHTMLIngestor
           type: "css"
           name: "#{hat(100, 36)}.css"
           content: this.cssContentFromRawCss($(style).html())
-          index: -1
+          index: 100000 # Put the inline styles last
 
         $(style).remove()
       

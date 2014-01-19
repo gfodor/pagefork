@@ -36,6 +36,8 @@ module.exports = class PhorkWriter
       index: { N: doc.index.toString() }
       primary: { N: if doc.primary then "1" else "0" }
 
+    item.media = { S: doc.media } if doc.media
+
     dyndb.putItem
       TableName: 'phork_docs'
       Item: item, (err, data) ->

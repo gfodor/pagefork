@@ -138,7 +138,7 @@ $ ->
     showWhenAllDocsReady()
 
   initCssDoc = (docInfo, doc, aceEditor) ->
-    component = new CssRenderer($("#styles-#{docInfo.doc_id}")[0])
+    component = new CssRenderer($("#styles-#{docInfo.doc_id}")[0], { media: docInfo.media })
     components[docInfo.doc_id] = component
 
     updateCssViaStyframe = (css, doc_id) ->

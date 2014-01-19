@@ -1,5 +1,6 @@
 window.CssRenderer = class CssRenderer
-  constructor: (@el) ->
+  constructor: (@el, options) ->
+    @media = options.media if options.media?
     @domMap = {}
 
   stringHash: (st) ->
@@ -41,6 +42,8 @@ window.CssRenderer = class CssRenderer
       if styleRule.parentRule
         if styleRule.parentRule.type == 4
           css = "@media #{styleRule.parentRule.media.mediaText} { #{css} }"
+      else if self.media
+        css = "@media #{self.media} { #{css} }"
 
       handleCssQuirks(css)
 

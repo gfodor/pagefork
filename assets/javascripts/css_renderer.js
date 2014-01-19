@@ -4,8 +4,11 @@
 
   window.CssRenderer = CssRenderer = (function() {
 
-    function CssRenderer(el) {
+    function CssRenderer(el, options) {
       this.el = el;
+      if (options.media != null) {
+        this.media = options.media;
+      }
       this.domMap = {};
     }
 
@@ -48,6 +51,8 @@
           if (styleRule.parentRule.type === 4) {
             css = "@media " + styleRule.parentRule.media.mediaText + " { " + css + " }";
           }
+        } else if (self.media) {
+          css = "@media " + self.media + " { " + css + " }";
         }
         return handleCssQuirks(css);
       };

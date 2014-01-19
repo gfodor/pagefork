@@ -92,12 +92,16 @@ app.get "/phorks/:phork_id.json", (req, res) ->
         ComparisonOperator: "EQ"
     (err, data) ->
       docs = _.map data.Items, (item) ->
-        created_at: new Date(_.parseInt(item.created_at.N))
-        doc_id: item.doc_id.S
-        type: item.type.S
-        index: parseInt(item.index.N)
-        primary: item.primary.N == '1'
-        name: item.name.S
+        doc =
+          created_at: new Date(_.parseInt(item.created_at.N))
+          doc_id: item.doc_id.S
+          type: item.type.S
+          index: parseInt(item.index.N)
+          primary: item.primary.N == '1'
+          name: item.name.S
+
+        doc.media = item.media.S if item.media
+        doc
 
       docs = _.sortBy(docs, (d) -> d.index)
 
