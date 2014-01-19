@@ -31,7 +31,7 @@ class HtmlToRNodeParser
         this.elementRNodeFromNode(node, rNodeKey)
       when NODE_TYPE.TEXT
         if node.textContent.trim().length > 0
-          React.DOM.text({}, node.textContent)
+          React.DOM.text({}, node.textContent.trim())
         else
           null
 

@@ -148,7 +148,7 @@ module.exports = class MHTMLIngestor
         hideComments: true
         indent: true
         wrap: 160
-        bare: true
+        bare: false
         
       tidyOps["logical-emphasis"] = true
       tidyOps["output-html"] = true

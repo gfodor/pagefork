@@ -44,7 +44,7 @@
           return this.elementRNodeFromNode(node, rNodeKey);
         case NODE_TYPE.TEXT:
           if (node.textContent.trim().length > 0) {
-            return React.DOM.text({}, node.textContent);
+            return React.DOM.text({}, node.textContent.trim());
           } else {
             return null;
           }
