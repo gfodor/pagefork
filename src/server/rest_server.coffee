@@ -81,16 +81,24 @@ app.get "/phorks/new", (req, res) ->
     Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mHtmlUrl) ->
       res.send { mhtml_url: mHtmlUrl, phork_id: phork_id }
 
-app.get "/phorks/:phork_id.json", (req, res) ->
+app.get "/guard", (req, res) ->
+  res.render 'guard'
+
+app.get "/styframe", (req, res) ->
+  res.render 'styframe'
+
+withPhorkDocs = (phork_id, callback) ->
   dynamodb.query
     TableName: "phork_docs"
     Select: "ALL_ATTRIBUTES"
     ConsistentRead: true
     KeyConditions:
       phork_id:
-        AttributeValueList: [{ S: req.params.phork_id }]
+        AttributeValueList: [{ S: phork_id }]
         ComparisonOperator: "EQ"
     (err, data) ->
+      callback([]) if err
+
       docs = _.map data.Items, (item) ->
         doc =
           created_at: new Date(_.parseInt(item.created_at.N))
@@ -101,20 +109,26 @@ app.get "/phorks/:phork_id.json", (req, res) ->
           name: item.name.S
 
         doc.media = item.media.S if item.media
+        doc.doctype = item.doctype.S if item.doctype
         doc
 
       docs = _.sortBy(docs, (d) -> d.index)
+      callback(docs)
 
-      res.json { docs }
-
-app.get "/guard", (req, res) ->
-  res.render 'guard'
-
-app.get "/styframe", (req, res) ->
-  res.render 'styframe'
+app.get "/phorks/:phork_id.json", (req, res) ->
+  withPhorkDocs req.params.phork_id, (docs) ->
+    res.json { docs }
 
 app.get "/phorks/:phork_id", (req, res) ->
-  res.render 'phork', { phork_id: req.params.phork_id }
+  doctype = ""
+
+  withPhorkDocs req.params.phork_id, (docs) ->
+    primaryDoc = _.find(docs, (d) -> d.primary)
+
+    if primaryDoc && primaryDoc.doctype
+      doctype = primaryDoc.doctype
+
+    res.render 'phork', { phork_id: req.params.phork_id, dt: "#{doctype}\n\n" }
 
 app.post "/phorks", (req, res) ->
   s3 = new AWS.S3()
