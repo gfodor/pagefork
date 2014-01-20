@@ -19,7 +19,7 @@ module.exports = class PhorkWriter
     dyndb.putItem
       TableName: 'phork_roots',
       Item: item, (err) ->
-        async.each docs,
+        async.eachLimit docs, 4,
           ((doc, callback) -> self.writePhorkDocument(dyndb, phork_id, doc, livedb, callback)),
           callback
 
@@ -37,6 +37,7 @@ module.exports = class PhorkWriter
       primary: { N: if doc.primary then "1" else "0" }
 
     item.media = { S: doc.media } if doc.media
+    item.doctype = { S: doc.doctype } if doc.doctype
 
     dyndb.putItem
       TableName: 'phork_docs'

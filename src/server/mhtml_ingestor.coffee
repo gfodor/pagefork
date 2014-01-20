@@ -116,6 +116,14 @@ module.exports = class MHTMLIngestor
     fs.readFile path, 'utf8', (err, data) =>
       $ = cheerio.load(data)
 
+      doctype = null
+
+      for line in data.split(/\n/)[0..10]
+        matches = /(<\!doctype[^>]*>)/i.exec(line)
+
+        if matches && matches.length > 0
+          doctype = matches[0]
+
       # Remove CSS
       $("link[rel='stylesheet']").remove()
       $("link[rel='Stylesheet']").remove()
@@ -158,12 +166,15 @@ module.exports = class MHTMLIngestor
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "  #{s}").join("\n")
         finalHtml = "#{bodyTag}\n#{indentedHtml}\n</body>"
 
-        documents.push
+        doc =
           type: "html"
           name: documentName
           index: fileIndex
           primary: isPrimary
           content: finalHtml
+
+        doc.doctype = doctype if doctype
+        documents.push doc
 
         callback(null, documents)
 
