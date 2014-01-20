@@ -151,7 +151,7 @@
       showWhenAllDocsReady = function() {
         if (_.keys(readyDocs).length >= totalDocs) {
           return setTimeout((function() {
-            return React.renderComponent(primaryComponent, $("#doc-container .phork-html")[0]);
+            return React.renderComponent(primaryComponent, $("#doc-container .phork-html-container")[0]);
           }), 0);
         } else {
           return setTimeout(showWhenAllDocsReady, 100);

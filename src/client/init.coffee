@@ -130,7 +130,7 @@ $ ->
     showWhenAllDocsReady = ->
       if _.keys(readyDocs).length >= totalDocs
         setTimeout((->
-          React.renderComponent primaryComponent, $("#doc-container .phork-html")[0]
+          React.renderComponent primaryComponent, $("#doc-container .phork-html-container")[0]
         ), 0)
       else
         setTimeout(showWhenAllDocsReady, 100)

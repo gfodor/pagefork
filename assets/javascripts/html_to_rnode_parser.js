@@ -30,8 +30,12 @@
     HtmlToRNodeParser.prototype.htmlToRNode = function(html, previousBracketDiff, previousTagDiff) {
       var container;
       container = document.createElement('html');
+      html = html.replace(/<\s*html/gi, "<phork-html");
+      html = html.replace(/<\/html/gi, "</phork-html");
+      html = html.replace(/<\s*body/gi, "<phork-body");
+      html = html.replace(/<\/body/gi, "</phork-body");
       container.innerHTML = html;
-      return this.rNodeFromNode($("body", container)[0], "rNodeRoot");
+      return this.rNodeFromNode($(container)[0], "rNodeRoot");
     };
 
     HtmlToRNodeParser.prototype.cleanHtml = function(html) {
@@ -51,19 +55,20 @@
       }
     };
 
-    HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey) {
-      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, isFont, isTT, konstructor, rNodeAttributes, selector, sizes, styles, tag, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+    HtmlToRNodeParser.prototype.elementRNodeFromNode = function(node, rNodeKey, isRoot) {
+      var attribute, attributeName, childNode, childRNode, childrenRNodes, isBody, isFont, isHtml, isTT, konstructor, rNodeAttributes, selector, sizes, styles, tag, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
       tag = node.tagName.toLowerCase();
       if (tag === "script" || tag === "noscript" || tag === "head") {
         return null;
       }
       isTT = tag === "tt";
-      isBody = tag === "body";
+      isBody = tag === "phork-body";
+      isHtml = tag === "phork-html";
       isFont = tag === "font";
       rNodeAttributes = {
         key: rNodeKey
       };
-      konstructor = (!isBody && React.DOM[tag]) || React.DOM.div;
+      konstructor = (!isBody && !isHtml && React.DOM[tag]) || React.DOM.div;
       styles = {};
       if (isTT) {
         styles["font-family"] = "monospace";
@@ -124,11 +129,16 @@
         }
         rNodeAttributes.style = styles;
       }
-      if (isBody) {
+      if (isHtml) {
         if (rNodeAttributes.className == null) {
           rNodeAttributes.className = "";
         }
-        rNodeAttributes.className += " phork-html-body";
+        rNodeAttributes.className += " phork-html";
+      } else if (isBody) {
+        if (rNodeAttributes.className == null) {
+          rNodeAttributes.className = "";
+        }
+        rNodeAttributes.className += " phork-body";
       }
       childrenRNodes = [];
       _ref3 = node.childNodes;

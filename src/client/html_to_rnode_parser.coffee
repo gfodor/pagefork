@@ -19,8 +19,14 @@ class HtmlToRNodeParser
 
   htmlToRNode: (html, previousBracketDiff, previousTagDiff) ->
     container = document.createElement('html')
+    html = html.replace(/<\s*html/gi, "<phork-html")
+    html = html.replace(/<\/html/gi, "</phork-html")
+    html = html.replace(/<\s*body/gi, "<phork-body")
+    html = html.replace(/<\/body/gi, "</phork-body")
+
     container.innerHTML = html
-    this.rNodeFromNode($("body", container)[0], "rNodeRoot")
+
+    this.rNodeFromNode($(container)[0], "rNodeRoot")
 
   cleanHtml: (html) ->
     html.trim().replace(/<script(.|\s)*<\/script>/gim, '').replace(/<noscript(.|\s)*<\/noscript>/gim, '')
@@ -35,16 +41,17 @@ class HtmlToRNodeParser
         else
           null
 
-  elementRNodeFromNode: (node, rNodeKey) ->
+  elementRNodeFromNode: (node, rNodeKey, isRoot) ->
     tag = node.tagName.toLowerCase()
     return null if tag == "script" || tag == "noscript" || tag == "head"
 
     isTT = tag == "tt"
-    isBody = tag == "body"
+    isBody = tag == "phork-body"
+    isHtml = tag == "phork-html"
     isFont = tag == "font"
 
     rNodeAttributes = { key: rNodeKey }
-    konstructor = (!isBody && React.DOM[tag]) || React.DOM.div
+    konstructor = (!isBody && !isHtml && React.DOM[tag]) || React.DOM.div
 
     styles = {}
 
@@ -97,9 +104,12 @@ class HtmlToRNodeParser
 
       rNodeAttributes.style = styles
 
-    if isBody
+    if isHtml
       rNodeAttributes.className = "" unless rNodeAttributes.className?
-      rNodeAttributes.className += " phork-html-body"
+      rNodeAttributes.className += " phork-html"
+    else if isBody
+      rNodeAttributes.className = "" unless rNodeAttributes.className?
+      rNodeAttributes.className += " phork-body"
 
     childrenRNodes = []
 

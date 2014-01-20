@@ -44,7 +44,7 @@ module.exports = class MHTMLIngestor
 
           if href
             cssMeta[href] = { }
-            cssMeta.media = media if media
+            cssMeta[href].media = media if media
 
       callback(null, cssMeta)
 
@@ -153,9 +153,13 @@ module.exports = class MHTMLIngestor
 
       bodyHtml = $("body").html() || ""
       $("body").empty()
-      $("body").addClass($("html").attr("class") || "")
 
       bodyTag = $("body").toString().replace("</body>", "")
+      htmlTag = "<html>"
+
+      if ($("html").length > 0)
+        $("html").empty()
+        htmlTag = $("html").toString().replace("</html>", "")
 
       tidyOps =
         hideComments: true
@@ -168,8 +172,8 @@ module.exports = class MHTMLIngestor
       tidyOps["show-body-only"] = true
 
       finalize = (err, html) ->
-        indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "  #{s}").join("\n")
-        finalHtml = "#{bodyTag}\n#{indentedHtml}\n</body>"
+        indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "    #{s}").join("\n")
+        finalHtml = "#{htmlTag}\n  #{bodyTag}\n#{indentedHtml}\n  </body></html>"
 
         doc =
           type: "html"

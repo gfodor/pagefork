@@ -42,14 +42,13 @@
         selector = _.map(styleRule.selectorText.split(","), function(s) {
           var hasLeadingHtmlAsterisk;
           hasLeadingHtmlAsterisk = s.trim().toLowerCase().indexOf("* html") === 0;
-          s = s.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2");
+          s = s.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-body$2");
+          s = s.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1.phork-html$2");
           s = s.replace(/\s\s+/gi, " ");
-          s = s.replace(/\*\s+html(\s|!|\.|#|$)/gi, "$1");
-          s = s.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2");
           if (hasLeadingHtmlAsterisk) {
-            return "* html .phork-html " + s;
+            return "* html .phork-html-container " + s;
           } else {
-            return ".phork-html " + s;
+            return ".phork-html-container " + s;
           }
         }).join(",");
         css = "" + selector + " { " + styleRule.style.cssText + " }";
@@ -57,7 +56,7 @@
           if (styleRule.parentRule.type === 4) {
             css = "@media " + styleRule.parentRule.media.mediaText + " { " + css + " }";
           }
-        } else if (self.media) {
+        } else if (self.media && self.media !== "all" && self.media !== "screen") {
           css = "@media " + self.media + " { " + css + " }";
         }
         return handleCssQuirks(css);

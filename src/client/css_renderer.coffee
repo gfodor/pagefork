@@ -34,15 +34,14 @@ window.CssRenderer = class CssRenderer
       selector = _.map(styleRule.selectorText.split(","), (s) ->
         hasLeadingHtmlAsterisk = s.trim().toLowerCase().indexOf("* html") == 0
 
-        s = s.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-html-body$2")
+        s = s.replace(/(^|\s)body(\s|!|\.|#|$)/gi, "$1.phork-body$2")
+        s = s.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1.phork-html$2")
         s = s.replace(/\s\s+/gi, " ")
-        s = s.replace(/\*\s+html(\s|!|\.|#|$)/gi, "$1")
-        s = s.replace(/(^|\s)html(\s|!|\.|#|$)/gi, "$1$2")
 
         if hasLeadingHtmlAsterisk
-          "* html .phork-html #{s}"
+          "* html .phork-html-container #{s}"
         else
-          ".phork-html #{s}"
+          ".phork-html-container #{s}"
       ).join(",")
 
       css = "#{selector} { #{styleRule.style.cssText} }"
@@ -50,7 +49,7 @@ window.CssRenderer = class CssRenderer
       if styleRule.parentRule
         if styleRule.parentRule.type == 4
           css = "@media #{styleRule.parentRule.media.mediaText} { #{css} }"
-      else if self.media
+      else if self.media && self.media != "all" && self.media != "screen"
         css = "@media #{self.media} { #{css} }"
 
       handleCssQuirks(css)
