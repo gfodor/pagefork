@@ -42,8 +42,9 @@ module.exports = class MHTMLIngestor
           href = $(link).attr("href")
           media = $(link).attr("media")
 
-          if href && media
-            cssMeta[href] = { media: media }
+          if href
+            cssMeta[href] = { }
+            cssMeta.media = media if media
 
       callback(null, cssMeta)
 
@@ -81,19 +82,23 @@ module.exports = class MHTMLIngestor
         css = this.cssContentFromRawCss(data)
         docLocation = docMeta["content-location"].toLowerCase()
 
+        docs = []
+
         for path, cssMetaCandidate of cssMetadata
           if docLocation.indexOf(path.toLowerCase()) == 0
             cssMeta = cssMetaCandidate
 
-        doc =
-          type: "css"
-          index: fileIndex
-          name: documentName
-          content: css
+        if cssMeta
+          doc =
+            type: "css"
+            index: fileIndex
+            name: documentName
+            content: css
 
-        doc.media = cssMeta.media if cssMeta && cssMeta.media
+          doc.media = cssMeta.media if cssMeta && cssMeta.media
+          docs.push(doc)
 
-        callback(null, [doc])
+        callback(null, [docs])
     
   cssContentFromRawCss: (css) ->
     css = _.map(css.split("\n"), (l) ->
