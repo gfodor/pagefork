@@ -179,7 +179,7 @@ module.exports = class MHTMLIngestor
           pattern = new RegExp("<(/?)#{tag}-ignore", "gi")
           html = html.replace(pattern, "<$1#{tag}")
 
-        html = html.replace(/__NBSP/g, "&nbsp;")
+        html = html.replace(/__PHORK_NBSP/g, "&nbsp;")
 
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "    #{s}").join("\n")
         finalHtml = "#{htmlTag}\n  #{bodyTag}\n#{indentedHtml}\n  </body></html>"
@@ -197,9 +197,9 @@ module.exports = class MHTMLIngestor
         callback(null, documents)
 
       # Add in inferred nbsps
-      bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+<\s*(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "/$1>__NBSP<$2")
-      bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+([A-Z0-9,'"$()#@!])/gi, "/$1>__NBSP$2")
-      bodyHtml = bodyHtml.replace(/([A-Z0-9,'"$#()@!])\s+<(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "$1__NBSP<$2")
+      bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+<\s*(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "/$1>__PHORK_NBSP<$2")
+      bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+([A-Z0-9,'"$()#@!])/gi, "/$1>__PHORK_NBSP$2")
+      bodyHtml = bodyHtml.replace(/([A-Z0-9,'"$#()@!])\s+<(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "$1__PHORK_NBSP<$2")
 
       # Tidy does some fuckery with ul, ol, dl, table
       for tag in blockTags
