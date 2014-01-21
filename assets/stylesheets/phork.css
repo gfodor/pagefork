@@ -53,3 +53,7 @@ body {
 .phork-html-body {
   margin: 8px;
 }
+
+.phork-nbsp:before {
+  content: " "
+}

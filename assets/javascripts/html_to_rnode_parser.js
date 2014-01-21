@@ -34,6 +34,7 @@
       html = html.replace(/<\/html/gi, "</phork-html");
       html = html.replace(/<\s*body/gi, "<phork-body");
       html = html.replace(/<\/body/gi, "</phork-body");
+      html = html.replace(/&nbsp;/gi, "<span class=\"phork-nbsp\">&nbsp;</span>");
       container.innerHTML = html;
       return this.rNodeFromNode($(container)[0], "rNodeRoot");
     };
