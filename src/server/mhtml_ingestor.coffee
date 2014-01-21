@@ -165,13 +165,18 @@ module.exports = class MHTMLIngestor
         hideComments: true
         indent: true
         wrap: 160
-        bare: false
         
       tidyOps["logical-emphasis"] = true
       tidyOps["output-html"] = true
       tidyOps["show-body-only"] = true
+      tidyOps["new-blocklevel-tags"] = "ul-ignore ol-ignore dl-ignore table-ignore"
 
       finalize = (err, html) ->
+        html = html.replace(/<(\/?)ul-ignore/g, "<$1ul")
+        html = html.replace(/<(\/?)ol-ignore/g, "<$1ol")
+        html = html.replace(/<(\/?)dl-ignore/g, "<$1dl")
+        html = html.replace(/<(\/?)table-ignore/g, "<$1table")
+
         indentedHtml = _.map(html.match(/[^\r\n]+/g), (s) -> "    #{s}").join("\n")
         finalHtml = "#{htmlTag}\n  #{bodyTag}\n#{indentedHtml}\n  </body></html>"
 
@@ -187,7 +192,12 @@ module.exports = class MHTMLIngestor
 
         callback(null, documents)
 
-      # Screws up CNN.com's doubly nested ul's :P
+      # Tidy does some fuckery with ul, ol, dl, table
+      bodyHtml = bodyHtml.replace(/<\s*(\/?)\s*ul([\s>])/gi, "<$1ul-ignore$2")
+      bodyHtml = bodyHtml.replace(/<\s*(\/?)\s*ol([\s>])/gi, "<$1ol-ignore$2")
+      bodyHtml = bodyHtml.replace(/<\s*(\/?)\s*dl([\s>])/gi, "<$1dl-ignore$2")
+      #bodyHtml = bodyHtml.replace(/<\s*(\/?)\s*table([\s>])/gi, "<$1table-ignore$2")
+
       htmltidy.tidy(bodyHtml, tidyOps, finalize)
 
   getFiles: (dir, cb) ->
