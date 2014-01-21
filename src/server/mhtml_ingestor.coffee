@@ -221,7 +221,7 @@ module.exports = class MHTMLIngestor
             type: "css"
             name: "#{hat(100, 36)}.css"
             content: this.cssContentFromRawCss($(style).html())
-            index: (100000 + inlineIndex) # Put the inline styles last
+            index: (100000 + (inlineIndex * 100)) # Put the inline styles last
             inline: true
             location: docLocation
 
