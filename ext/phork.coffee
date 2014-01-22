@@ -1,5 +1,5 @@
 chrome.browserAction.onClicked.addListener (tab) ->
-  # TODO wait until tab ready
+  # TODO wait until tab ready, don't let click twice
   chrome.pageCapture.saveAsMHTML { tabId: tab.id }, (mhtml) ->
     host = "http://localhost:3000"
 

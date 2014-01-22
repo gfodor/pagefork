@@ -24,7 +24,8 @@
       autocomplete: "autoComplete",
       maxlength: "maxLength",
       autocorrect: "autoCorrect",
-      autocapitalize: "autoCapitalize"
+      autocapitalize: "autoCapitalize",
+      contenteditable: "contentEditable"
     };
 
     HtmlToRNodeParser.prototype.htmlToRNode = function(html, previousBracketDiff, previousTagDiff) {
@@ -49,7 +50,7 @@
           return this.elementRNodeFromNode(node, rNodeKey);
         case NODE_TYPE.TEXT:
           if (node.textContent.trim().length > 0) {
-            return React.DOM.text({}, node.textContent.trim());
+            return React.DOM.text({}, node.textContent.replace(/\n/, "").replace(/\s\s+/g, " ").trim());
           } else {
             return null;
           }

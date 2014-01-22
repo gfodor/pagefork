@@ -87,7 +87,6 @@ module.exports = class MHTMLIngestor
 
     for i in [0..(importPathComponents.length)]
       importSubpath = importPathComponents[i..-1].join("/")
-      console.log "try #{importSubpath}"
 
       found = false
 
@@ -245,13 +244,14 @@ module.exports = class MHTMLIngestor
           wrap: 160
           location: docLocation
           
-        tidyOps["logical-emphasis"] = true
+        tidyOps["logical-emphasis"] = false
         tidyOps["output-html"] = true
         tidyOps["show-body-only"] = true
 
         blockTags = ["ul", "li", "ol", "dl", "dd", "dt"]
 
         tidyOps["new-blocklevel-tags"] = _.map(blockTags, (t) -> "#{t}-ignore").join(" ")
+        tidyOps["drop-empty-elements"] = false
 
         finalize = (err, html) ->
           for tag in blockTags

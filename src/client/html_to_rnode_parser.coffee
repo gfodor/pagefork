@@ -16,6 +16,7 @@ class HtmlToRNodeParser
     maxlength: "maxLength"
     autocorrect: "autoCorrect"
     autocapitalize: "autoCapitalize"
+    contenteditable: "contentEditable"
 
   htmlToRNode: (html, previousBracketDiff, previousTagDiff) ->
     container = document.createElement('html')
@@ -38,7 +39,7 @@ class HtmlToRNodeParser
         this.elementRNodeFromNode(node, rNodeKey)
       when NODE_TYPE.TEXT
         if node.textContent.trim().length > 0
-          React.DOM.text({}, node.textContent.trim())
+          React.DOM.text({}, node.textContent.replace(/\n/, "").replace(/\s\s+/g, " ").trim())
         else
           null
 

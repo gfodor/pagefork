@@ -1836,7 +1836,7 @@ var DefaultDOMPropertyConfig = {
     link: null,
     vlink: null,
     alink: null,
-    text: null
+    text: null,
   },
   DOMAttributeNames: {
     className: 'class',
