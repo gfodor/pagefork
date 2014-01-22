@@ -1,5 +1,12 @@
+chrome.runtime.onConnect.addListener (conn) ->
+  console.log "connected"
+  console.log conn
+
+  chrome.runtime.onMessage.addListener (message, sender, sendResponse) ->
+    console.log message
+
+
 chrome.browserAction.onClicked.addListener (tab) ->
-  # TODO wait until tab ready
   chrome.pageCapture.saveAsMHTML { tabId: tab.id }, (mhtml) ->
     host = "http://localhost:3000"
 

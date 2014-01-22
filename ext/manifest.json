@@ -4,6 +4,7 @@
   "name": "Phork",
   "description": "Phork lets you take a copy of any web page, make small edits, and share those changes.",
   "version": "1.0",
+  "devtools_page": "devtool.html",
 
   "permissions": [
     "pageCapture",
