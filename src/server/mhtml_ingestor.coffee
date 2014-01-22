@@ -279,7 +279,7 @@ module.exports = class MHTMLIngestor
         # Add in inferred nbsps
         bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+<\s*(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "/$1>__PHORK_NBSP<$2")
         bodyHtml = bodyHtml.replace(/\/(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)>\s+([A-Z0-9,'"$()#@!])/gi, "/$1>__PHORK_NBSP$2")
-        bodyHtml = bodyHtml.replace(/([A-Z0-9,'"$#()@!])\s+<(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "$1__PHORK_NBSP<$2")
+        bodyHtml = bodyHtml.replace(/([A-Z0-9,'"$#()@!])\s+<(\/?)(b|big|i|small|tt|abbr|acronym|cite|code|dfn|em|kbd|strong|samp|var|a|bdo|br|img|map|object|q|script|span|sub|sup|button|input|label|select|textarea)/gi, "$1__PHORK_NBSP<$2$3")
 
         # Tidy does some fuckery with ul, ol, dl, table
         for tag in blockTags
