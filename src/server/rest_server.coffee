@@ -9,6 +9,7 @@ cors = require "cors"
 url = require "url"
 util = require "util"
 livedb = require "livedb"
+zlib = require 'zlib'
 sharejs = require "share"
 _ = require "lodash"
 {Duplex} = require 'stream'
@@ -16,6 +17,7 @@ browserChannel = require('browserchannel').server
 
 MHTMLIngestor = require '../../lib/mhtml_ingestor'
 PhorkWriter = require '../../lib/phork_writer'
+inflate = require "../../lib/rawinflate"
 
 module.exports = app = express()
 
@@ -112,7 +114,7 @@ withPhorkDocs = (phork_id, callback) ->
         doc.doctype = item.doctype.S if item.doctype
         doc
 
-      docs = _.sortBy(docs, (d) -> d.index)
+      docs = _.sortBy(docs, (d) -> if d.primary then -1 else d.index)
       callback(docs)
 
 app.get "/phorks/:phork_id.json", (req, res) ->
@@ -142,13 +144,15 @@ app.post "/phorks", (req, res) ->
   temp.mkdir "phork", (err, tempPath) ->
     s3.getObject
       Bucket: "phork-data",
-      Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlData) ->
+      Key: "uploads/mhtml/#{phork_id}.mhtml", (err, mhtmlCompressedData) ->
         return res.send(500, err) if handle_error(err)
+
+        mhtmlData = inflate.inflate mhtmlCompressedData.Body.toString("utf8")
 
         temp.open "#{phork_id}.temp.mhtml", (err, mhtmlTempInfo) ->
           return res.send(500, err) if handle_error(err)
 
-          fs.write mhtmlTempInfo.fd, mhtmlData.Body, 0, mhtmlData.ContentLength, null, (err, mhtmlWritten, mhtmlBuffer) ->
+          fs.write mhtmlTempInfo.fd, new Buffer(mhtmlData), 0, mhtmlData.length, null, (err, mhtmlWritten, mhtmlBuffer) ->
             return res.send(500, err) if handle_error(err)
 
             fs.close(mhtmlTempInfo.fd)

@@ -7,6 +7,7 @@ all:
 
 server:
 	$(COFFEE) -c -o lib src/server
+	cp src/server/*.js lib
 
 server-watch:
 	$(COFFEE) -c -w -o lib src/server

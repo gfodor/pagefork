@@ -8,10 +8,16 @@
       host = "http://localhost:3000";
       reader = new FileReader();
       reader.addEventListener("loadend", function() {
-        var payload;
-        payload = {
-          mhtml: reader.result
-        };
+        var arr, c, payload, _i, _len, _ref;
+        arr = Array.prototype.map.call(reader.result.toString(), function(c) {
+          return c.charCodeAt(0);
+        });
+        payload = "";
+        _ref = deflate(arr);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          c = _ref[_i];
+          payload += String.fromCharCode(c);
+        }
         return $.get("" + host + "/phorks/new", {}, function(response) {
           var mhtml_url, phork_id;
           mhtml_url = response.mhtml_url;
@@ -20,7 +26,7 @@
             type: "PUT",
             contentType: "multipart/related",
             url: mhtml_url,
-            data: payload.mhtml.toString(),
+            data: payload,
             success: function(response) {
               return $.post("" + host + "/phorks", {
                 phork_id: phork_id

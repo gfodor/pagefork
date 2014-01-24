@@ -18,7 +18,7 @@
   },
 
   "background": {
-    "scripts": ["jquery-2.0.3.min.js", "phork.js"],
+    "scripts": ["jquery-2.0.3.min.js", "rawdeflate.js", "phork.js"],
     "persistent": false
   }
 }
